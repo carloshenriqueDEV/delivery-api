@@ -26,9 +26,9 @@ public class ClienteController {
      * Cadastrar novo cliente 
      */ 
     @PostMapping 
-    public ResponseEntity<?> cadastrar(@Valid @RequestBody Cliente cliente) { 
+    public ResponseEntity<?> cadastrar(@Valid @RequestBody ClienteDTO cliente) { 
         try { 
-            Cliente clienteSalvo = clienteService.cadastrar(cliente); 
+            ClienteDTO clienteSalvo = clienteService.cadastrar(cliente); 
             return ResponseEntity.status(HttpStatus.CREATED).body(clienteSalvo); 
         } catch (IllegalArgumentException e) { 
 
@@ -71,9 +71,9 @@ public class ClienteController {
      */ 
     @PutMapping("/{id}") 
     public ResponseEntity<?> atualizar(@PathVariable Long id, 
-                                      @Valid @RequestBody Cliente cliente) { 
+                                      @Valid @RequestBody ClienteDTO cliente) { 
         try { 
-            Cliente clienteAtualizado = clienteService.atualizar(id, cliente); 
+            ClienteDTO clienteAtualizado = clienteService.atualizar(cliente); 
             return ResponseEntity.ok(clienteAtualizado); 
         } catch (IllegalArgumentException e) { 
 
@@ -92,9 +92,9 @@ public class ClienteController {
      * Ina var cliente (so delete) 
      */ 
     @DeleteMapping("/{id}") 
-    public ResponseEntity<?> inativar(@PathVariable Long id) { 
+    public ResponseEntity<?> AtivarOuDesativar(@PathVariable Long id) { 
         try { 
-            clienteService.inativar(id); 
+            clienteService.ativarDesativar(id); 
             return ResponseEntity.ok().body("Cliente ina vado com sucesso"); 
         } catch (IllegalArgumentException e) { 
 
@@ -123,7 +123,7 @@ public class ClienteController {
      */ 
     @GetMapping("/email/{email}") 
     public ResponseEntity<?> buscarPorEmail(@PathVariable String email) { 
-        Optional<Cliente> cliente = clienteService.buscarPorEmail(email); 
+        Optional<ClienteDTO> cliente = clienteService.buscarPorEmail(email); 
  
         if (cliente.isPresent()) { 
             return ResponseEntity.ok(cliente.get()); 
