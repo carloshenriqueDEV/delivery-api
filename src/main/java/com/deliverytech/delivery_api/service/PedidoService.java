@@ -5,15 +5,16 @@ import com.deliverytech.delivery_api.enums.StatusPedido;
 import com.deliverytech.delivery_api.repository.*; 
 import org.springframework.beans.factory.annotation.Autowired; 
 import org.springframework.stereotype.Service; 
-import org.springframework.transaction.annotation.Transactional; 
+import org.springframework.transaction.annotation.Transactional;
+
+import com.deliverytech.delivery_api.service.dtos.ItemPedidoDTO;
 import com.deliverytech.delivery_api.service.dtos.PedidoDTO;
- 
-import java.util.List; 
-import java.util.Optional; 
- 
+import com.deliverytech.delivery_api.service.interfaces.PedidoServiceInterface;
+
+import java.util.List;
 @Service 
 @Transactional 
-public class PedidoService { 
+public class PedidoService implements PedidoServiceInterface { 
  
     @Autowired 
     private PedidoRepository pedidoRepository; 
@@ -30,28 +31,54 @@ public class PedidoService {
     /** 
      * Criar novo pedido 
      */ 
+    @Override
     public PedidoDTO criarPedido(PedidoDTO pedidoDTO) { 
-        //ElseThorw são valdações contra o banco, logo está ok estarem aqui.
         Cliente cliente = clienteRepository.findByIdAndAtivoTrue(pedidoDTO.clienteId()) 
             .orElseThrow(() -> new IllegalArgumentException("Cliente não encontrado: " + pedidoDTO.clienteId())); 
  
         Restaurante restaurante = restauranteRepository.findByIdAndAtivoTrue(pedidoDTO.restauranteId()) 
-            .orElseThrow(() -> new IllegalArgumentException("Restaurante não encontrado: " + pedidoDTO.restauranteId())); 
-        
-        //todo: refatorar para incluí-la na entidade. 
-        if (!cliente.isAtivo()) { 
-            throw new IllegalArgumentException("Cliente inativo não pode fazer pedidos"); 
-        } 
+            .orElseThrow(() -> new IllegalArgumentException("Restaurante não encontrado: " + pedidoDTO.restauranteId()));   
+            
+        List<Produto> produtos = produtoRepository.findAllById(
+            pedidoDTO.itens().stream()
+                .map(ItemPedidoDTO::produtoId)
+                .toList()
+        );
 
-        //todo: refatorar para incluí-la na entidade.
-        if (!restaurante.getAtivo()) { 
-            throw new IllegalArgumentException("Restaurante não está disponível"); 
-        } 
- 
-        Pedido pedido = new Pedido(); 
-        pedido.setCliente(cliente); 
-        pedido.setRestaurante(restaurante); 
-        pedido.setStatus(StatusPedido.PENDENTE); 
+        if (produtos.isEmpty()) {
+            throw new IllegalArgumentException("Nenhum produto encontrado para os itens informados.");
+        }
+
+        // Verifica se há algum produto inativo
+        boolean algumInativo = produtos.stream()
+            .anyMatch(produto -> !produto.getDisponivel());
+
+        if (algumInativo) {
+            throw new IllegalStateException("O pedido contém produtos inativos.");
+        }
+
+        List<ItemPedido> itens = pedidoDTO.itens().stream()
+            .map(itemDTO -> {
+                Produto produto = produtos.stream()
+                    .filter(p -> p.getId().equals(itemDTO.produtoId()))
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalArgumentException(
+                        "Produto com ID " + itemDTO.produtoId() + " não encontrado."
+                    ));
+
+               
+                ItemPedido item = new ItemPedido();
+                item.setProduto(produto);
+                item.setQuantidade(itemDTO.quantidade());
+                item.setPrecoUnitario(produto.getPreco()); 
+                item.calcularSubtotal(); 
+
+                return item;
+            })
+            .toList();
+       
+
+        Pedido pedido = new Pedido(cliente,restaurante, itens,StatusPedido.PENDENTE, pedidoDTO.observacoes()); 
 
         pedidoRepository.save(pedido);
 
@@ -63,7 +90,8 @@ public class PedidoService {
             pedido.getValorTotal(),
             pedido.getObservacoes(),
             pedido.getCliente().getId(),
-            pedido.getRestaurante().getId()
+            pedido.getRestaurante().getId(),
+            pedidoDTO.itens()
         );
     } 
  
@@ -107,42 +135,57 @@ public class PedidoService {
             pedido.getValorTotal(),
             pedido.getObservacoes(),
             pedido.getCliente().getId(),
-            pedido.getRestaurante().getId()
+            pedido.getRestaurante().getId(),
+            pedido.getItens().stream()
+                .map(i -> new ItemPedidoDTO(
+                    item.getId(),
+                    item.getQuantidade(),
+                    item.getPrecoUnitario(),
+                    item.getSubtotal(),
+                    item.getProduto().getId()
+                ))
+                .toList()
         ); 
     } 
- 
-    /** 
-     * Confirmar pedido 
-     */ 
-    public PedidoDTO confirmarPedido(Long pedidoId) { 
-        
-        Pedido pedido = atualizarStatus(pedidoId, StatusPedido.CONFIRMADO, null);
-
-        return new PedidoDTO(
-            pedido.getId(),
-            pedido.getNumeroPedido(),
-            pedido.getDataPedido(),
-            pedido.getStatus(),
-            pedido.getValorTotal(),
-            pedido.getObservacoes(),
-            pedido.getCliente().getId(),
-            pedido.getRestaurante().getId()
-        ); 
-    } 
- 
+    
     /** 
      * Buscar por ID 
      */ 
     @Transactional(readOnly = true) 
-    public Optional<Pedido> buscarPorId(Long id) { 
-        return pedidoRepository.findById(id); 
+    @Override
+    public PedidoDTO buscarPorId(Long id) { 
+        Pedido pedido = pedidoRepository.buscarPedidoCompleto(id)
+            .orElseThrow(() -> new IllegalArgumentException("Pedido não encontrado: " + id));        
+
+        return new PedidoDTO(
+                pedido.getId(),
+                pedido.getNumeroPedido(),
+                pedido.getDataPedido(),
+                pedido.getStatus(),
+                pedido.getValorTotal(),
+                pedido.getObservacoes(),
+                pedido.getCliente().getId(),
+                pedido.getRestaurante().getId(),
+                pedido.getItens() == null ? 
+                    List.of() : 
+                    pedido.getItens().stream()
+                        .map(item -> new ItemPedidoDTO(
+                                item.getId(),
+                                item.getQuantidade(),
+                                item.getPrecoUnitario(),
+                                item.getSubtotal(),
+                                item.getProduto().getId()
+                        ))
+                        .toList()
+        );
     } 
  
     /** 
      * Listar pedidos por cliente 
      */ 
     @Transactional(readOnly = true) 
-    public List<PedidoDTO> listarPorCliente(Long clienteId) { 
+    @Override
+    public List<PedidoDTO> buscarPorCliente(Long clienteId) { 
         var cliente = clienteRepository.findById(clienteId)
             .orElseThrow(() -> new IllegalArgumentException("Cliente não encontrado: " + clienteId));
             
@@ -156,15 +199,8 @@ public class PedidoService {
                 p.getValorTotal(),
                 p.getObservacoes(),
                 p.getCliente().getId(),
-                p.getRestaurante().getId()
-                // p.getItens().stream()
-                //     .map(i -> new ItemPedidoDTO(
-                //         i.getId(),
-                //         i.getProduto().getId(),
-                //         i.getQuantidade(),
-                //         i.getPrecoUnitario(),
-                //         i.getSubtotal()
-                //     )).toList()
+                p.getRestaurante().getId(),
+                null
             ))
             .toList(); 
     } 
@@ -173,16 +209,11 @@ public class PedidoService {
      * Buscar por número do pedido 
      */ 
     @Transactional(readOnly = true) 
-    public Optional<Pedido> buscarPorNumero(String numeroPedido) { 
-        return Optional.ofNullable(pedidoRepository.findByNumeroPedido(numeroPedido)); 
-    } 
- 
-    /** 
-     * Cancelar pedido 
-     */ 
-    public PedidoDTO cancelarPedido(Long pedidoId, String motivo) { 
-        Pedido pedido = atualizarStatus(pedidoId, StatusPedido.CANCELADO, motivo);
- 
+    @Override
+    public PedidoDTO buscarPorNumero(String numeroPedido) { 
+        Pedido pedido = pedidoRepository.findByNumeroPedido(numeroPedido)
+            .orElseThrow(() -> new IllegalArgumentException("Pedido não encontrado: " + numeroPedido));
+
         return new PedidoDTO(
             pedido.getId(),
             pedido.getNumeroPedido(),
@@ -191,66 +222,49 @@ public class PedidoService {
             pedido.getValorTotal(),
             pedido.getObservacoes(),
             pedido.getCliente().getId(),
-            pedido.getRestaurante().getId()
+            pedido.getRestaurante().getId(),
+            pedido.getItens().stream()
+                .map(i -> new ItemPedidoDTO(
+                    i.getId(),
+                    i.getQuantidade(),
+                    i.getPrecoUnitario(),
+                    i.getSubtotal(),
+                    i.getProduto().getId()
+                ))
+                .toList()
+        );
+        
+    } 
+ 
+  
+    @Override
+    public PedidoDTO atualizarStatus(Long pedidoId, StatusPedido status, String motivo) {
+         Pedido pedido = pedidoRepository.buscarPedidoCompleto(pedidoId)
+            .orElseThrow(() -> new IllegalArgumentException("Pedido não encontrado: " + pedidoId)); 
+        
+        pedido.setStatus(status, motivo);
+        pedidoRepository.save(pedido);
+
+        return new PedidoDTO(
+            pedido.getId(),
+            pedido.getNumeroPedido(),
+            pedido.getDataPedido(),
+            pedido.getStatus(),
+            pedido.getValorTotal(),
+            pedido.getObservacoes(),
+            pedido.getCliente().getId(),
+            pedido.getRestaurante().getId(),
+            pedido.getItens().stream()
+                .map(i -> new ItemPedidoDTO(
+                    i.getId(),
+                    i.getQuantidade(),
+                    i.getPrecoUnitario(),
+                    i.getSubtotal(),
+                    i.getProduto().getId()
+                ))
+                .toList()
         ); 
     } 
 
-    /*
-     * Atualizar status do pedido 
-     */
-    public Pedido atualizarStatus(Long pedidoId, StatusPedido novoStatus, String motivo) {
-        Pedido pedido = pedidoRepository.findById(pedidoId)
-            .orElseThrow(() -> new IllegalArgumentException("Pedido não encontrado: " + pedidoId));
-
-        // Todo: Refatorar para incluir na entidade da linha 202 a 245.
-        if (pedido.getStatus() == StatusPedido.CANCELADO) {
-            throw new IllegalArgumentException("Pedido cancelado não pode ter status alterado");
-        }
-
-        switch (novoStatus) {
-            case CONFIRMADO:
-                if (pedido.getStatus() != StatusPedido.PENDENTE) {
-                    throw new IllegalArgumentException("Apenas pedidos pendentes podem ser confirmados");
-                }
-
-                if (pedido.getItens().isEmpty()) { 
-                    throw new IllegalArgumentException("Pedido deve ter pelo menos um item"); 
-                } 
-
-                break;
-            case PREPARANDO:
-                if (pedido.getStatus() != StatusPedido.CONFIRMADO) {
-                    throw new IllegalArgumentException("Apenas pedidos confirmados podem entrar em preparo");
-                }
-                break;
-            case SAIU_PARA_ENTREGA:
-                if (pedido.getStatus() != StatusPedido.PREPARANDO) {
-                    throw new IllegalArgumentException("Apenas pedidos em preparo podem sair para entrega");
-                }
-                break;
-            case ENTREGUE:
-                if (pedido.getStatus() != StatusPedido.SAIU_PARA_ENTREGA) {
-                    throw new IllegalArgumentException("Apenas pedidos que saíram para entrega podem ser entregues");
-                }
-                break;
-            case CANCELADO:
-                 if (pedido.getStatus() == StatusPedido.ENTREGUE) { 
-                    throw new IllegalArgumentException("Pedido já entregue não pode ser cancelado"); 
-                } 
- 
-                if (pedido.getStatus() == StatusPedido.CANCELADO) { 
-                    throw new IllegalArgumentException("Pedido já está cancelado"); 
-                } 
-
-                if (motivo != null && !motivo.trim().isEmpty()) { 
-                    pedido.setObservacoes(pedido.getObservacoes() + " | Cancelado: " + motivo); 
-                }
-                break;
-            default:
-                throw new IllegalArgumentException("Transição de status inválida");
-        }
-
-        pedido.setStatus(novoStatus);
-        return pedidoRepository.save(pedido);
-    }
+    
 }

@@ -1,7 +1,7 @@
 package com.deliverytech.delivery_api.service.interfaces;
 
+import java.util.List;
 import java.util.Optional;
-
 import com.deliverytech.delivery_api.service.dtos.ClienteDTO;
 
 public interface ClienteServiceInterface {
@@ -11,5 +11,6 @@ public interface ClienteServiceInterface {
     ClienteDTO atualizar(ClienteDTO clienteAtualizado);
     void ativarDesativar(Long id);
     Iterable<ClienteDTO> listarAtivos();
+    List<ClienteDTO> buscarPorNome(String nome);
 
 }

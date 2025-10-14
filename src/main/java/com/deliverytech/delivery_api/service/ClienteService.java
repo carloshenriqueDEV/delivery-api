@@ -22,6 +22,7 @@ public class ClienteService implements ClienteServiceInterface {
     /** 
      * Cadastrar novo cliente 
      */ 
+    @Override
     public ClienteDTO cadastrar(ClienteDTO clienteDto) { 
 
         //valição contra o banco
@@ -48,6 +49,7 @@ public class ClienteService implements ClienteServiceInterface {
      * Buscar cliente por ID 
      */ 
     @Transactional(readOnly = true) 
+    @Override
     public Optional<ClienteDTO> buscarPorId(Long id) { 
 
         var cliente = clienteRepository.findById(id);
@@ -70,6 +72,7 @@ public class ClienteService implements ClienteServiceInterface {
      * Buscar cliente por email 
      */ 
     @Transactional(readOnly = true) 
+    @Override
     public Optional<ClienteDTO> buscarPorEmail(String email) { 
         var cliente = clienteRepository.findByEmail(email);
 
@@ -91,6 +94,7 @@ public class ClienteService implements ClienteServiceInterface {
      * Listar todos os clientes a vos 
      */ 
     @Transactional(readOnly = true) 
+    @Override
     public List<ClienteDTO> listarAtivos() {
         return clienteRepository.findByAtivoTrue()
                 .stream()
@@ -109,7 +113,7 @@ public class ClienteService implements ClienteServiceInterface {
     /** 
      * Atualizar dados do cliente 
      */ 
-    @Transactional()
+    @Override
     public ClienteDTO atualizar(ClienteDTO clienteAtualizado) { 
         Cliente cliente = clienteRepository.findById(clienteAtualizado.id()) 
             .orElseThrow(() -> new IllegalArgumentException("Cliente não encontrado: ")); 
@@ -136,13 +140,24 @@ public class ClienteService implements ClienteServiceInterface {
      * Buscar clientes por nome 
      */ 
     @Transactional(readOnly = true) 
-    public List<Cliente> buscarPorNome(String nome) { 
-        return clienteRepository.findByNomeContainingIgnoreCase(nome); 
+    @Override
+    public List<ClienteDTO> buscarPorNome(String nome) { 
+        return clienteRepository.findByNomeContainingIgnoreCase(nome)
+        .stream()
+        .map(c -> new ClienteDTO( 
+            c.getId(), 
+            c.getNome(), 
+            c.getEmail(), 
+            c.getTelefone(), 
+            c.isAtivo(),
+            c.getEndereco() 
+        )).toList(); 
     } 
 
     /**
      * Ativar e Desativar cliente
      */
+    @Override
     public void ativarDesativar(Long id) {
         Cliente cliente = clienteRepository.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("Cliente não encontrado: " + id));

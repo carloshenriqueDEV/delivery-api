@@ -69,7 +69,7 @@ public class PedidoController {
     @PutMapping("/{pedidoId}/confirmar") 
     public ResponseEntity<?> confirmarPedido(@PathVariable Long pedidoId) { 
         try { 
-            PedidoDTO pedido = pedidoService.confirmarPedido(pedidoId); 
+            PedidoDTO pedido = pedidoService.atualizarStatus(pedidoId, StatusPedido.CONFIRMADO, null); 
             return ResponseEntity.ok(pedido); 
         } catch (IllegalArgumentException e) { 
 
@@ -89,13 +89,22 @@ public class PedidoController {
      */ 
     @GetMapping("/{id}") 
     public ResponseEntity<?> buscarPorId(@PathVariable Long id) { 
-        Optional<Pedido> pedido = pedidoService.buscarPorId(id); 
+        PedidoDTO pedido = pedidoService.buscarPorId(id); 
  
-        if (pedido.isPresent()) { 
-            return ResponseEntity.ok(pedido.get()); 
-        } else { 
-            return ResponseEntity.notFound().build(); 
-        } 
+      
+        try{
+            return ResponseEntity.ok(pedido); 
+        } catch (IllegalArgumentException e) { 
+
+            if(e.getMessage().contains("não encontrado")) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Erro: " + e.getMessage());
+            }
+
+            return ResponseEntity.badRequest().body("Erro: " + e.getMessage()); 
+        } catch (Exception e) { 
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR) 
+                .body("Erro interno do servidor"); 
+        }
     } 
  
     /** 
@@ -103,7 +112,7 @@ public class PedidoController {
      */ 
     @GetMapping("/cliente/{clienteId}") 
     public ResponseEntity<List<PedidoDTO>> listarPorCliente(@PathVariable Long clienteId) { 
-        List<PedidoDTO> pedidos = pedidoService.listarPorCliente(clienteId); 
+        List<PedidoDTO> pedidos = pedidoService.buscarPorCliente(clienteId); 
         return ResponseEntity.ok(pedidos); 
     } 
  
@@ -112,13 +121,19 @@ public class PedidoController {
      */ 
     @GetMapping("/numero/{numeroPedido}") 
     public ResponseEntity<?> buscarPorNumero(@PathVariable String numeroPedido) { 
-        Optional<Pedido> pedido = pedidoService.buscarPorNumero(numeroPedido); 
+        PedidoDTO pedido = pedidoService.buscarPorNumero(numeroPedido); 
  
-        if (pedido.isPresent()) { 
-            return ResponseEntity.ok(pedido.get()); 
-        } else { 
-            return ResponseEntity.notFound().build(); 
-        } 
+        try{
+            return ResponseEntity.ok(pedido);
+        } catch (IllegalArgumentException e) {  
+            if(e.getMessage().contains("não encontrado")) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Erro: " + e.getMessage());
+            }
+            return ResponseEntity.badRequest().body("Erro: " + e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("Erro interno do servidor");
+        }
     } 
  
     /** 
@@ -128,17 +143,8 @@ public class PedidoController {
     public ResponseEntity<?> atualizarStatus(@PathVariable Long pedidoId, 
                                             @RequestParam StatusPedido status, @RequestParam String motivo) { 
         try { 
-            Pedido pedido = pedidoService.atualizarStatus(pedidoId, status, motivo); 
-            return ResponseEntity.ok(new PedidoDTO( 
-                pedido.getId(), 
-                pedido.getNumeroPedido(), 
-                pedido.getDataPedido(), 
-                pedido.getStatus(), 
-                pedido.getValorTotal(), 
-                pedido.getObservacoes(), 
-                pedido.getCliente().getId(), 
-                pedido.getRestaurante().getId() 
-            )); 
+            PedidoDTO pedido = pedidoService.atualizarStatus(pedidoId, status, motivo); 
+            return ResponseEntity.ok(pedido); 
         } catch (IllegalArgumentException e) { 
 
             if(e.getMessage().contains("não encontrado")) {
@@ -159,7 +165,8 @@ public class PedidoController {
     public ResponseEntity<?> cancelarPedido(@PathVariable Long pedidoId, 
                                            @RequestParam(required = false) String motivo) { 
         try { 
-            PedidoDTO pedido = pedidoService.cancelarPedido(pedidoId, motivo); 
+            PedidoDTO pedido = pedidoService.atualizarStatus(pedidoId,  StatusPedido.CANCELADO, motivo);  
+            
             return ResponseEntity.ok(pedido); 
         } catch (IllegalArgumentException e) { 
 

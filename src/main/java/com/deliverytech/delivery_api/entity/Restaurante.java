@@ -19,6 +19,23 @@ public class Restaurante {
     private BigDecimal taxaEntrega; 
     private boolean ativo; 
     private Float avaliacao;
+
+    public Restaurante() {
+        // pode ficar vazio, o JPA só precisa dele para criar a instância
+    }
+
+    // 🔹 Construtor de uso da aplicação (Service, Controller etc.)
+    public Restaurante(String nome, String categoria, String endereco, String telefone, BigDecimal taxaEntrega) {
+        this.validarDadosRestaurante(nome, taxaEntrega);
+
+        this.nome = nome;
+        this.categoria = categoria;
+        this.endereco = endereco;
+        this.telefone = telefone;
+        this.taxaEntrega = taxaEntrega;
+        this.ativo = true;
+        this.avaliacao = 0.0f; 
+    }
  
     @OneToMany(mappedBy = "restaurante") 
     private List<Produto> produtos; 
@@ -45,5 +62,32 @@ public class Restaurante {
         return id;
     }
 
+    public boolean isAtivo() {
+        return ativo;
+    }
+
+     /** 
+     * Validações de negócio 
+     */
+    private void validarDadosRestaurante(String nome, BigDecimal taxaEntrega) { 
+         validarNome(nome);
+         validarTaxaEntrega(taxaEntrega);
+    }
+
+    private void validarNome(String nome) { 
+        if (nome == null || nome.trim().isEmpty()) { 
+            throw new IllegalArgumentException("Nome é obrigatório"); 
+        } 
+
+        if (nome.length() < 2) {
+            throw new IllegalArgumentException("Nome deve ter pelo menos 2 caracteres"); 
+        } 
+    }
+
+    private void validarTaxaEntrega(BigDecimal taxaEntrega) { 
+        if (taxaEntrega == null || taxaEntrega.compareTo(BigDecimal.ZERO) < 0) { 
+            throw new IllegalArgumentException("Taxa de entrega não pode ser negativa"); 
+        }
+    }
     
 } 

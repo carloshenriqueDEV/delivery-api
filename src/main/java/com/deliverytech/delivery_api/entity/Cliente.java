@@ -2,7 +2,7 @@ package com.deliverytech.delivery_api.entity;
 
 import jakarta.persistence.*; 
 import lombok.Data;
-
+import lombok.val;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -29,7 +29,7 @@ public class Cliente {
     // 🔹 Construtor de uso da aplicação (Service, Controller etc.)
     public Cliente(String nome, String email, String telefone, String endereco) {
 
-        this.validarDadosCliente();
+        this.validarDadosCliente(nome, email, telefone, endereco);
 
         this.nome = nome;
         this.email = email;
@@ -49,18 +49,9 @@ public class Cliente {
      /** 
      * Validações de negócio 
      */ 
-    private void validarDadosCliente() { 
-        if (this.nome == null || this.nome.trim().isEmpty()) { 
-            throw new IllegalArgumentException("Nome é obrigatório"); 
-        } 
- 
-        if (this.email == null || this.email.trim().isEmpty()) { 
-            throw new IllegalArgumentException("Email é obrigatório"); 
-        } 
- 
-        if (this.nome.length() < 2) { 
-            throw new IllegalArgumentException("Nome deve ter pelo menos 2 caracteres"); 
-        } 
+    private void validarDadosCliente(String nome, String email, String telefone, String endereco) { 
+        validarNome(nome); 
+        validarEmail(email);
     } 
 
     //getters de todas as propriedades
@@ -81,6 +72,31 @@ public class Cliente {
     }
     public boolean isAtivo() {
         return ativo;
+    }
+
+    public void setNome(String nome) {
+        validarNome(nome);
+        this.nome = nome;
+    }
+
+    private void validarNome(String nome) { 
+        if (nome == null || nome.trim().isEmpty()) { 
+            throw new IllegalArgumentException("Nome é obrigatório"); 
+        } 
+
+        if (nome.length() < 2) { 
+            throw new IllegalArgumentException("Nome deve ter pelo menos 2 caracteres"); 
+        } 
+    }
+
+    private void validarEmail(String email) { 
+        if (email == null || email.trim().isEmpty()) { 
+            throw new IllegalArgumentException("Email é obrigatório"); 
+        } 
+
+        if (!email.contains("@") || !email.contains(".")) { 
+            throw new IllegalArgumentException("Email inválido"); 
+        } 
     }
 
 }

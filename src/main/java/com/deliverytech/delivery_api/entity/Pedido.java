@@ -57,6 +57,22 @@ public class Pedido {
         this.status = StatusPedido.CONFIRMADO;
     }
 
+     public Pedido() {
+        
+    }
+
+    public Pedido(Cliente cliente, Restaurante restaurante, List<ItemPedido> itens, StatusPedido statusPedido, String observacoes) {
+        
+        this.validarDados(cliente, restaurante, itens);
+        this.validarStatus(statusPedido, null);
+        this.observacoes = observacoes;
+        this.cliente = cliente;
+        this.restaurante = restaurante;
+        this.itens = itens;
+        this.status = statusPedido;
+        this.itens.forEach(item -> item.setPedido(this));
+    }
+
     @PrePersist
     public void prePersist() {
         this.dataPedido = LocalDateTime.now();
@@ -69,10 +85,7 @@ public class Pedido {
             .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
-    public Pedido() {
-        super();
-        this.itens = new java.util.ArrayList<ItemPedido>();
-    }
+   
 
     public Long getId() {
         return id;
@@ -106,7 +119,97 @@ public class Pedido {
         return numeroPedido;
     }
 
+    public void setCliente(Cliente cliente) {
+        this.validarClienteAtivo(cliente);
+        this.cliente = cliente;
+    }
 
+    public void setRestaurante(Restaurante restaurante) {
+        this.validarRestauranteAtivo(restaurante);
+        this.restaurante = restaurante;
+    }
+
+    public void setItens(List<ItemPedido> itens) {
+        if (itens == null || itens.isEmpty()) {
+            throw new IllegalArgumentException("O pedido deve conter ao menos um item.");
+        }
+        this.itens = itens;
+        this.itens.forEach(item -> item.setPedido(this));
+    }
+
+    public void setStatus(StatusPedido status, String motivo) {
+        validarStatus(status, motivo);
+        this.status = status;
+    }
+
+    //Regras de negócio
+    private void validarDados(Cliente cliente, Restaurante restaurante, List<ItemPedido> itens) {
+        validarClienteAtivo(cliente);
+        validarRestauranteAtivo(restaurante);
+        if (itens == null || itens.isEmpty()) {
+            throw new IllegalArgumentException("O pedido deve conter ao menos um item.");
+        }
+    }
+
+    private void validarClienteAtivo(Cliente cliente) {
+        if (Objects.isNull(cliente) || !cliente.isAtivo()) {
+            throw new IllegalArgumentException("Cliente inválido ou inativo.");
+        }
+    }
+
+    private void validarRestauranteAtivo(Restaurante restaurante) {
+        if (Objects.isNull(restaurante) || !restaurante.isAtivo()) {
+            throw new IllegalArgumentException("Restaurante inválido ou inativo.");
+        }
+    }
+
+    private void validarStatus(StatusPedido novoStatus, String motivo) {
+
+        if (this.status == StatusPedido.CANCELADO) {
+            throw new IllegalArgumentException("Pedido cancelado não pode ter status alterado");
+        }
+
+        if(this.status != null){
+             switch (novoStatus) {
+                case CONFIRMADO:
+                    if (this.status != StatusPedido.PENDENTE) {
+                        throw new IllegalArgumentException("Apenas pedidos pendentes podem ser confirmados");
+                    }
+
+                    break;
+                case PREPARANDO:
+                    if (this.status != StatusPedido.CONFIRMADO) {
+                        throw new IllegalArgumentException("Apenas pedidos confirmados podem entrar em preparo");
+                    }
+                    break;
+                case SAIU_PARA_ENTREGA:
+                    if (this.status != StatusPedido.PREPARANDO) {
+                        throw new IllegalArgumentException("Apenas pedidos em preparo podem sair para entrega");
+                    }
+                    break;
+                case ENTREGUE:
+                    if (this.status != StatusPedido.SAIU_PARA_ENTREGA) {
+                        throw new IllegalArgumentException("Apenas pedidos que saíram para entrega podem ser entregues");
+                    }
+                    break;
+                case CANCELADO:
+                    if (this.status == StatusPedido.ENTREGUE) { 
+                        throw new IllegalArgumentException("Pedido já entregue não pode ser cancelado"); 
+                    } 
+    
+                    if (this.status == StatusPedido.CANCELADO) { 
+                        throw new IllegalArgumentException("Pedido já está cancelado"); 
+                    } 
+
+                    if (motivo != null && !motivo.trim().isEmpty()) { 
+                        this.observacoes = " | Cancelado: " + motivo; 
+                    }
+                    break;
+                default:
+                    throw new IllegalArgumentException("Transição de status inválida");
+            }
+        }
+    }
 
    
 }
