@@ -90,4 +90,12 @@ public class Restaurante {
         }
     }
     
+    
+     public BigDecimal calcularTaxaDeEntrega(BigDecimal distanciaKm, BigDecimal valorPorKm) {
+        if (distanciaKm == null || distanciaKm.compareTo(BigDecimal.ZERO) <= 0)
+            return BigDecimal.ZERO;
+
+        BigDecimal acrescimoPorKm = valorPorKm.multiply(distanciaKm);
+        return this.taxaEntrega.add(acrescimoPorKm);
+    }
 } 

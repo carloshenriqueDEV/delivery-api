@@ -1,6 +1,5 @@
 package com.deliverytech.delivery_api.controller;
 
-import com.deliverytech.delivery_api.entity.Cliente; 
 import com.deliverytech.delivery_api.service.ClienteService;
 import com.deliverytech.delivery_api.service.dtos.ClienteDTO;
 
@@ -15,7 +14,7 @@ import java.util.List;
 import java.util.Optional; 
  
 @RestController 
-@RequestMapping("/clientes") 
+@RequestMapping("/api/clientes") 
 @CrossOrigin(origins = "*") 
 public class ClienteController { 
  
@@ -26,21 +25,9 @@ public class ClienteController {
      * Cadastrar novo cliente 
      */ 
     @PostMapping 
-    public ResponseEntity<?> cadastrar(@Valid @RequestBody ClienteDTO cliente) { 
-        try { 
-            ClienteDTO clienteSalvo = clienteService.cadastrar(cliente); 
-            return ResponseEntity.status(HttpStatus.CREATED).body(clienteSalvo); 
-        } catch (IllegalArgumentException e) { 
-
-            if(e.getMessage().contains("não encontrado")) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Erro: " + e.getMessage());
-            }
-
-            return ResponseEntity.badRequest().body("Erro: " + e.getMessage()); 
-        } catch (Exception e) { 
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR) 
-                .body("Erro interno do servidor"); 
-        } 
+    public ResponseEntity<?> cadastrar(@Valid @RequestBody ClienteDTO cliente) {       
+        ClienteDTO clienteSalvo = clienteService.cadastrar(cliente); 
+        return ResponseEntity.status(HttpStatus.CREATED).body(clienteSalvo); 
     } 
  
     /** 
@@ -58,12 +45,7 @@ public class ClienteController {
     @GetMapping("/{id}") 
     public ResponseEntity<?> buscarPorId(@PathVariable Long id) { 
         Optional<ClienteDTO> cliente = clienteService.buscarPorId(id); 
- 
-        if (cliente.isPresent()) { 
             return ResponseEntity.ok(cliente.get()); 
-        } else { 
-            return ResponseEntity.notFound().build(); 
-        } 
     } 
  
     /** 
@@ -72,20 +54,10 @@ public class ClienteController {
     @PutMapping("/{id}") 
     public ResponseEntity<?> atualizar(@PathVariable Long id, 
                                       @Valid @RequestBody ClienteDTO cliente) { 
-        try { 
-            ClienteDTO clienteAtualizado = clienteService.atualizar(cliente); 
-            return ResponseEntity.ok(clienteAtualizado); 
-        } catch (IllegalArgumentException e) { 
-
-            if(e.getMessage().contains("não encontrado")) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Erro: " + e.getMessage());
-            }
-
-            return ResponseEntity.badRequest().body("Erro: " + e.getMessage()); 
-        } catch (Exception e) { 
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR) 
-                .body("Erro interno do servidor"); 
-        } 
+    
+        ClienteDTO clienteAtualizado = clienteService.atualizar(cliente); 
+        return ResponseEntity.ok(clienteAtualizado); 
+     
     } 
  
     /** 
@@ -93,20 +65,8 @@ public class ClienteController {
      */ 
     @DeleteMapping("/{id}") 
     public ResponseEntity<?> AtivarOuDesativar(@PathVariable Long id) { 
-        try { 
             clienteService.ativarDesativar(id); 
-            return ResponseEntity.ok().body("Cliente ina vado com sucesso"); 
-        } catch (IllegalArgumentException e) { 
-
-            if(e.getMessage().contains("não encontrado")) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Erro: " + e.getMessage());
-            }
-            
-            return ResponseEntity.badRequest().body("Erro: " + e.getMessage()); 
-        } catch (Exception e) { 
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR) 
-                .body("Erro interno do servidor"); 
-        } 
+            return ResponseEntity.ok().body("Cliente inativado com sucesso"); 
     } 
  
     /** 
@@ -125,10 +85,16 @@ public class ClienteController {
     public ResponseEntity<?> buscarPorEmail(@PathVariable String email) { 
         Optional<ClienteDTO> cliente = clienteService.buscarPorEmail(email); 
  
-        if (cliente.isPresent()) { 
-            return ResponseEntity.ok(cliente.get()); 
-        } else { 
-            return ResponseEntity.notFound().build(); 
-        } 
+        return ResponseEntity.ok(cliente.get()); 
     } 
+    
+    /*
+     * Atualiza status do cliente (ativo/inativo)
+     */
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<?> atualizarStatus(@PathVariable Long id, @RequestParam boolean ativo) {
+            clienteService.ativarDesativar(id);
+            String status = ativo ? "ativado" : "inativado";
+            return ResponseEntity.ok().body("Cliente " + status + " com sucesso");
+    }
 }

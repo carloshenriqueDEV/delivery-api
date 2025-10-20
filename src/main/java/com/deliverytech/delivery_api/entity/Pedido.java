@@ -26,6 +26,8 @@ public class Pedido {
     @Enumerated(EnumType.STRING) 
     private StatusPedido status;
     private BigDecimal valorTotal;
+    private String EnderecoDeEntrega;
+    private BigDecimal taxaDeEntrega;
     private String observacoes;  
    
  
@@ -61,30 +63,23 @@ public class Pedido {
         
     }
 
-    public Pedido(Cliente cliente, Restaurante restaurante, List<ItemPedido> itens, StatusPedido statusPedido, String observacoes) {
+    public Pedido(Cliente cliente, Restaurante restaurante, List<ItemPedido> itens, StatusPedido statusPedido, String observacoes, BigDecimal taxaDeEntrega, String enderecoDeEntrega) {
         
         this.validarDados(cliente, restaurante, itens);
         this.validarStatus(statusPedido, null);
         this.observacoes = observacoes;
         this.cliente = cliente;
         this.restaurante = restaurante;
+        this.EnderecoDeEntrega = enderecoDeEntrega;
+        this.taxaDeEntrega = taxaDeEntrega;
         this.itens = itens;
         this.status = statusPedido;
-        this.itens.forEach(item -> item.setPedido(this));
-    }
-
-    @PrePersist
-    public void prePersist() {
         this.dataPedido = LocalDateTime.now();
-        this.status = StatusPedido.PENDENTE;
-        this.numeroPedido = "PED-" + System.currentTimeMillis();
-        this.valorTotal = itens.stream()
-            .filter(Objects::nonNull)
-            .map(ItemPedido::getSubtotal)
-            .filter(Objects::nonNull)
-            .reduce(BigDecimal.ZERO, BigDecimal::add);
+        this.status = statusPedido == null ? StatusPedido.PENDENTE : statusPedido;
+        this.numeroPedido = this.numeroPedido == null ? "PED-" + System.currentTimeMillis() : this.numeroPedido;
+        this.itens = itens;
+        this.calcularValorTotal();
     }
-
    
 
     public Long getId() {
@@ -100,7 +95,7 @@ public class Pedido {
     }
 
     public BigDecimal getValorTotal() {
-        return Objects.isNull(valorTotal) ? BigDecimal.ZERO : valorTotal;
+        return this.valorTotal;
     }
 
     public Cliente getCliente() {
@@ -211,5 +206,17 @@ public class Pedido {
         }
     }
 
-   
+   private void calcularValorTotal() {
+        BigDecimal valorTotalItens = (this.itens == null || this.itens.isEmpty())
+    ? BigDecimal.ZERO
+    : this.itens.stream()
+        .filter(Objects::nonNull)
+        .map(ItemPedido::getSubtotal)
+        .filter(Objects::nonNull)
+        .reduce(BigDecimal.ZERO, BigDecimal::add);     
+
+        this.valorTotal = valorTotalItens
+                            .add(this.taxaDeEntrega);
+
+    }
 }

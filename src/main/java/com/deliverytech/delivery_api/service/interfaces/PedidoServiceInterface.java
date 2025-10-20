@@ -12,4 +12,5 @@ public interface PedidoServiceInterface {
    PedidoDTO adicionarItem(Long pedidoId, Long produtoId, Integer quantidade);
    PedidoDTO buscarPorNumero(String numeroPedido);
    PedidoDTO atualizarStatus(Long pedidoId, StatusPedido status, String motivo);
+   PedidoDTO calcularTotalPedido(PedidoDTO pedidoDTO);
 }

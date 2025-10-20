@@ -9,7 +9,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param; 
 import org.springframework.stereotype.Repository;
 
-import java.lang.foreign.Linker.Option;
 import java.math.BigDecimal; 
 import java.time.LocalDateTime; 
 import java.util.List;
@@ -35,7 +34,6 @@ public interface PedidoRepository extends JpaRepository<Pedido, Long> {
     Optional<Pedido> buscarPedidoCompleto(@Param("id") Long id);
  
     // Buscar por número do pedido 
-    @Query("SELECT p FROM Pedido p WHERE p.id = :numeroPedido")
     Optional<Pedido> findByNumeroPedido(@Param("numeroPedido") String numeroPedido);
  
     // Buscar pedidos por período 
@@ -64,12 +62,23 @@ public interface PedidoRepository extends JpaRepository<Pedido, Long> {
     BigDecimal calcularVendasPorPeriodo(@Param("inicio") LocalDateTime inicio, 
                                        @Param("fim") LocalDateTime fim); 
 
-   List<ItemPedido> findItensByPedidoId(Long pedidoId);
+   @Query("SELECT i FROM ItemPedido i WHERE i.pedido.id = :pedidoId")
+   List<ItemPedido> findItensByPedidoId(@Param("pedidoId") Long pedidoId);
 
    // Buscar os 10 pedidos mais recentes
-   List<Pedido> findTop10ByOrderByDataPedidoDesc();
+   @Query("""
+            SELECT DISTINCT p
+            FROM Pedido p
+            LEFT JOIN FETCH p.itens i
+            LEFT JOIN FETCH i.produto prod
+            LEFT JOIN FETCH p.cliente c
+            LEFT JOIN FETCH p.restaurante r
+            ORDER BY p.dataPedido DESC
+        """)
+    List<Pedido> findTop10ByOrderByDataPedidoDesc();
 
    // Buscar pedidos com valor total acima de um valor específico
+   
    List<Pedido> findByValorTotalGreaterThan(BigDecimal valor);
 
    // Relatório - pedidos por período e status

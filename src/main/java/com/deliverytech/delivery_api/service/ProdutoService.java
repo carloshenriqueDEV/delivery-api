@@ -24,7 +24,9 @@ public class ProdutoService implements ProdutoServiceInterface {
  
     @Autowired 
     private RestauranteRepository restauranteRepository; 
- 
+    
+    @Autowired
+    private RestauranteService restauranteService;
     /** 
      * Cadastrar novo produto 
      */ 
@@ -72,32 +74,10 @@ public class ProdutoService implements ProdutoServiceInterface {
     @Transactional(readOnly = true) 
     @Override
     public List<ProdutoDTO> buscarProdutosPorRestaurante(Long restauranteId) { 
-        Restaurante restaurante = restauranteRepository.findById(restauranteId)
-            .orElseThrow(() -> new IllegalArgumentException("Restaurante não encontrado: " + restauranteId));
+       
+        RestauranteDTO restaurante = restauranteService.buscarProdutos(restauranteId);
 
-        List<Produto> produtos = produtoRepository.findByRestauranteIdAndDisponivelTrue(restauranteId); 
-
-        return produtos.stream()
-            .map(p ->  new ProdutoDTO( 
-            p.getId(), 
-            p.getNome(), 
-            p.getDescricao(), 
-            p.getPreco(), 
-            p.getCategoria(), 
-            p.getDisponivel(),
-            new RestauranteDTO(
-                restaurante.getId(),
-                restaurante.getNome(),
-                restaurante.getCategoria(),
-                restaurante.getEndereco(),
-                restaurante.getTelefone(),
-                restaurante.getTaxaEntrega(),
-                restaurante.isAtivo(),
-                null,
-                null
-            )
-        )
-        ).toList(); 
+        return restaurante.produtos();
     } 
  
     /** 

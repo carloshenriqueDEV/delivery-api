@@ -2,8 +2,6 @@ package com.deliverytech.delivery_api.entity;
 
 import jakarta.persistence.*; 
 import lombok.Data;
-import lombok.val;
-
 import java.time.LocalDateTime;
 import java.util.List;
 

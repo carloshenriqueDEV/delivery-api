@@ -15,6 +15,17 @@ public class ItemPedido {
     private int quantidade; 
     private BigDecimal precoUnitario; 
     private BigDecimal subtotal; 
+
+    public ItemPedido() {
+        // pode ficar vazio, o JPA só precisa dele para criar a instância
+    }   
+
+    public ItemPedido(int quantidade, BigDecimal precoUnitario, Produto produto) {
+        this.quantidade = quantidade;
+        this.precoUnitario = precoUnitario;
+        this.produto = produto;
+        this.subtotal = this.calcularSubtotal();
+    }
  
     @ManyToOne 
     @JoinColumn(name = "pedido_id") 

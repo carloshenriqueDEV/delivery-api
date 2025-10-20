@@ -1,22 +1,27 @@
 package com.deliverytech.delivery_api.service;
 
-import com.deliverytech.delivery_api.entity.Restaurante; 
+import com.deliverytech.delivery_api.entity.Restaurante;
+import com.deliverytech.delivery_api.external.DistanceApiClient;
 import com.deliverytech.delivery_api.repository.RestauranteRepository;
+import com.deliverytech.delivery_api.service.dtos.ProdutoDTO;
 import com.deliverytech.delivery_api.service.dtos.RestauranteDTO;
 import com.deliverytech.delivery_api.service.interfaces.RestauranteServiceInterface;
 
 import org.springframework.beans.factory.annotation.Autowired; 
 import org.springframework.stereotype.Service; 
-import org.springframework.transaction.annotation.Transactional; 
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
 import java.util.List; 
-import java.util.Optional; 
- 
 @Service 
 @Transactional 
 public class RestauranteService implements RestauranteServiceInterface { 
  
     @Autowired 
     private RestauranteRepository restauranteRepository; 
+
+    @Autowired
+    private DistanceApiClient distanceApiClient;
  
     /** 
      * Cadastrar novo restaurante 
@@ -56,24 +61,21 @@ public class RestauranteService implements RestauranteServiceInterface {
      */ 
     @Transactional(readOnly = true) 
     @Override
-    public Optional<RestauranteDTO> buscarPorId(Long id) { 
-       var restaurante = restauranteRepository.findById(id); 
-       
-        if (restaurante.isEmpty()) {
-            throw new IllegalArgumentException("Restaurante não encontrado: " + id);
-        }
-
-        return restaurante.map(r -> new RestauranteDTO( 
-            r.getId(), 
-            r.getNome(), 
-            r.getCategoria(), 
-            r.getEndereco(), 
-            r.getTelefone(), 
-            r.getTaxaEntrega(),
-            r.isAtivo(),
-            r.getAvaliacao(),
+    public RestauranteDTO buscarPorId(Long id) { 
+       var restaurante = restauranteRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("Restaurante não encontrado: " + id)); 
+         
+        return new RestauranteDTO( 
+            restaurante.getId(), 
+            restaurante.getNome(), 
+            restaurante.getCategoria(), 
+            restaurante.getEndereco(), 
+            restaurante.getTelefone(), 
+            restaurante.getTaxaEntrega(),
+            restaurante.isAtivo(),
+            restaurante.getAvaliacao(),
             null
-        ));
+        );
     } 
  
     /** 
@@ -157,6 +159,38 @@ public class RestauranteService implements RestauranteServiceInterface {
  
         restaurante.setAtivo(false); 
         restauranteRepository.save(restaurante); 
+    }
+
+    @Override
+    public RestauranteDTO buscarProdutos(Long id) {
+        Restaurante restaurante = restauranteRepository.findRestauranteComProdutosDisponiveis(id)
+        .orElseThrow(() -> new IllegalArgumentException("Restaurante não encontrado: " + id));
+
+        List<ProdutoDTO> produtos =  restaurante.getProdutos().stream().map(p -> new ProdutoDTO(
+                p.getId(),
+                p.getNome(), p.getDescricao(), p.getPreco(), p.getCategoria(), p.getDisponivel(), null))
+                .toList();
+
+        return new RestauranteDTO( 
+            restaurante.getId(), 
+            restaurante.getNome(), 
+            restaurante.getCategoria(), 
+            restaurante.getEndereco(), 
+            restaurante.getTelefone(), 
+            restaurante.getTaxaEntrega(),
+            restaurante.isAtivo(),
+            restaurante.getAvaliacao(),
+            produtos
+        );
     } 
+
+    public BigDecimal calcularTaxaDeEntrega(Long id, String cepCliente){
+        Restaurante restaurante = restauranteRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("Restaurante não encontrado: " + id));
+
+        BigDecimal distancia = this.distanceApiClient.calcularDistanciaKm(restaurante.getEndereco(),cepCliente);
+        
+        return restaurante.calcularTaxaDeEntrega(distancia, BigDecimal.valueOf(1));
+    }
   
 } 

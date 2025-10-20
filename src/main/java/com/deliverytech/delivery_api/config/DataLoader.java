@@ -2,13 +2,18 @@ package com.deliverytech.delivery_api.config;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
 import com.deliverytech.delivery_api.entity.Cliente;
+import com.deliverytech.delivery_api.entity.ItemPedido;
+import com.deliverytech.delivery_api.entity.Pedido;
+import com.deliverytech.delivery_api.entity.Produto;
 import com.deliverytech.delivery_api.entity.Restaurante;
 import com.deliverytech.delivery_api.enums.StatusPedido;
 import com.deliverytech.delivery_api.repository.*;;
@@ -105,23 +110,27 @@ public class DataLoader implements CommandLineRunner{
         System.out.println("Iniciando carga de pedidos...");
         var clientes = clienteRepository.findAll();
         var produtosRest1 = produtoRepository.findByRestauranteAndDisponivelTrue(restaurante1);
-        var produtosRest2 = produtoRepository.findByRestauranteAndDisponivelTrue(restaurante2);
+        // var produtosRest2 = produtoRepository.findByRestauranteAndDisponivelTrue(restaurante2);
         for (int i = 1; i <= 5; i++) {
-            var pedido1 = new com.deliverytech.delivery_api.entity.Pedido();
-            pedido1.setCliente(clientes.get(i % clientes.size()));
-            pedido1.setRestaurante(restaurante1);
-            pedido1.setStatus(StatusPedido.ENTREGUE);
-            pedido1.setDataPedido(LocalDateTime.now().minusDays(10 - i));
-            pedido1.setValorTotal(produtosRest1.get(i % produtosRest1.size()).getPreco());
+            
+            Produto produto1 = produtosRest1.get(i % produtosRest1.size());
+            ItemPedido item = new ItemPedido(4, BigDecimal.valueOf(1.5), produto1);
+            List<ItemPedido> itensPedido1 = new ArrayList<ItemPedido>();
+            itensPedido1.add(item);
+
+            Pedido pedido1 = new Pedido(clientes.get(i % clientes.size()), restaurante1, itensPedido1, StatusPedido.ENTREGUE, null, BigDecimal.valueOf(0), "Rua dos bobos número 0.");
+            
             pedidoRepository.save(pedido1);
 
-            var pedido2 = new com.deliverytech.delivery_api.entity.Pedido();
-            pedido2.setCliente(clientes.get((i + 1) % clientes.size()));
-            pedido2.setRestaurante(restaurante2);
-            pedido2.setStatus(StatusPedido.ENTREGUE);
-            pedido2.setDataPedido(LocalDateTime.now().minusDays(10 - i));
-            pedido2.setValorTotal(produtosRest2.get(i % produtosRest2.size()).getPreco());
-            pedidoRepository.save(pedido2);
+            // var pedido2 = new Pedido();
+            // pedido2.setCliente(clientes.get((i + 1) % clientes.size()));
+            // pedido2.setRestaurante(restaurante2);
+            // pedido2.setStatus(StatusPedido.ENTREGUE);
+            // pedido2.setDataPedido(LocalDateTime.now().minusDays(10 - i));
+            //  Produto produto2 = produtosRest1.getFirst();
+            // ItemPedido item2 = new ItemPedido(4, BigDecimal.valueOf(1.5), produto2);
+            // pedido2.setValorTotal(produtosRest2.get(i % produtosRest2.size()).getPreco());
+            // pedidoRepository.save(pedido2);
         }
     }
 

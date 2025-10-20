@@ -11,6 +11,8 @@ import com.deliverytech.delivery_api.service.dtos.ItemPedidoDTO;
 import com.deliverytech.delivery_api.service.dtos.PedidoDTO;
 import com.deliverytech.delivery_api.service.interfaces.PedidoServiceInterface;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 @Service 
 @Transactional 
@@ -27,17 +29,24 @@ public class PedidoService implements PedidoServiceInterface {
  
     @Autowired 
     private ProdutoRepository produtoRepository; 
+
+    @Autowired
+    private RestauranteService restauranteService;
  
     /** 
      * Criar novo pedido 
      */ 
     @Override
-    public PedidoDTO criarPedido(PedidoDTO pedidoDTO) { 
+    public PedidoDTO criarPedido( PedidoDTO pedidoDTO) { 
         Cliente cliente = clienteRepository.findByIdAndAtivoTrue(pedidoDTO.clienteId()) 
             .orElseThrow(() -> new IllegalArgumentException("Cliente não encontrado: " + pedidoDTO.clienteId())); 
  
         Restaurante restaurante = restauranteRepository.findByIdAndAtivoTrue(pedidoDTO.restauranteId()) 
             .orElseThrow(() -> new IllegalArgumentException("Restaurante não encontrado: " + pedidoDTO.restauranteId()));   
+
+        if(pedidoDTO.itens().isEmpty() || pedidoDTO.itens() == null ){
+            throw new IllegalArgumentException("Itens do pedido não informados.");
+        }
             
         List<Produto> produtos = produtoRepository.findAllById(
             pedidoDTO.itens().stream()
@@ -77,8 +86,10 @@ public class PedidoService implements PedidoServiceInterface {
             })
             .toList();
        
-
-        Pedido pedido = new Pedido(cliente,restaurante, itens,StatusPedido.PENDENTE, pedidoDTO.observacoes()); 
+        
+        BigDecimal taxaDeEntrega = restauranteService.calcularTaxaDeEntrega(restaurante.getId(), cliente.getEndereco());
+            
+        Pedido pedido = new Pedido(cliente,restaurante, itens,StatusPedido.PENDENTE, pedidoDTO.observacoes(), taxaDeEntrega, pedidoDTO.EnderecoDeEntrega()); 
 
         pedidoRepository.save(pedido);
 
@@ -89,6 +100,7 @@ public class PedidoService implements PedidoServiceInterface {
             pedido.getStatus(),
             pedido.getValorTotal(),
             pedido.getObservacoes(),
+            pedido.getEnderecoDeEntrega(),
             pedido.getCliente().getId(),
             pedido.getRestaurante().getId(),
             pedidoDTO.itens()
@@ -134,6 +146,7 @@ public class PedidoService implements PedidoServiceInterface {
             pedido.getStatus(),
             pedido.getValorTotal(),
             pedido.getObservacoes(),
+            pedido.getEnderecoDeEntrega(),
             pedido.getCliente().getId(),
             pedido.getRestaurante().getId(),
             pedido.getItens().stream()
@@ -164,11 +177,10 @@ public class PedidoService implements PedidoServiceInterface {
                 pedido.getStatus(),
                 pedido.getValorTotal(),
                 pedido.getObservacoes(),
+                pedido.getEnderecoDeEntrega(),
                 pedido.getCliente().getId(),
                 pedido.getRestaurante().getId(),
-                pedido.getItens() == null ? 
-                    List.of() : 
-                    pedido.getItens().stream()
+                pedido.getItens().stream()
                         .map(item -> new ItemPedidoDTO(
                                 item.getId(),
                                 item.getQuantidade(),
@@ -198,9 +210,10 @@ public class PedidoService implements PedidoServiceInterface {
                 p.getStatus(),
                 p.getValorTotal(),
                 p.getObservacoes(),
+                p.getEnderecoDeEntrega(),
                 p.getCliente().getId(),
                 p.getRestaurante().getId(),
-                null
+                new ArrayList<ItemPedidoDTO>()
             ))
             .toList(); 
     } 
@@ -221,8 +234,9 @@ public class PedidoService implements PedidoServiceInterface {
             pedido.getStatus(),
             pedido.getValorTotal(),
             pedido.getObservacoes(),
+            pedido.getEnderecoDeEntrega(),
             pedido.getCliente().getId(),
-            pedido.getRestaurante().getId(),
+             pedido.getRestaurante().getId(),
             pedido.getItens().stream()
                 .map(i -> new ItemPedidoDTO(
                     i.getId(),
@@ -252,6 +266,7 @@ public class PedidoService implements PedidoServiceInterface {
             pedido.getStatus(),
             pedido.getValorTotal(),
             pedido.getObservacoes(),
+            pedido.getEnderecoDeEntrega(),
             pedido.getCliente().getId(),
             pedido.getRestaurante().getId(),
             pedido.getItens().stream()
@@ -266,5 +281,66 @@ public class PedidoService implements PedidoServiceInterface {
         ); 
     } 
 
-    
+    public  PedidoDTO calcularTotalPedido(PedidoDTO pedidoDTO){
+        Cliente cliente = clienteRepository.findByIdAndAtivoTrue(pedidoDTO.clienteId()) 
+            .orElseThrow(() -> new IllegalArgumentException("Cliente não encontrado: " + pedidoDTO.clienteId())); 
+ 
+        Restaurante restaurante = restauranteRepository.findByIdAndAtivoTrue(pedidoDTO.restauranteId()) 
+            .orElseThrow(() -> new IllegalArgumentException("Restaurante não encontrado: " + pedidoDTO.restauranteId()));   
+            
+        List<Produto> produtos = produtoRepository.findAllById(
+            pedidoDTO.itens().stream()
+                .map(ItemPedidoDTO::produtoId)
+                .toList()
+        );
+
+        if (produtos.isEmpty()) {
+            throw new IllegalArgumentException("Nenhum produto encontrado para os itens informados.");
+        }
+
+        // Verifica se há algum produto inativo
+        boolean algumInativo = produtos.stream()
+            .anyMatch(produto -> !produto.getDisponivel());
+
+        if (algumInativo) {
+            throw new IllegalStateException("O pedido contém produtos inativos.");
+        }
+
+        List<ItemPedido> itens = pedidoDTO.itens().stream()
+            .map(itemDTO -> {
+                Produto produto = produtos.stream()
+                    .filter(p -> p.getId().equals(itemDTO.produtoId()))
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalArgumentException(
+                        "Produto com ID " + itemDTO.produtoId() + " não encontrado."
+                    ));
+
+               
+                ItemPedido item = new ItemPedido();
+                item.setProduto(produto);
+                item.setQuantidade(itemDTO.quantidade());
+                item.setPrecoUnitario(produto.getPreco()); 
+                item.calcularSubtotal(); 
+
+                return item;
+            })
+            .toList();
+       
+        BigDecimal taxaDeEntrega = restauranteService.calcularTaxaDeEntrega(restaurante.getId(), cliente.getEndereco());
+
+        Pedido pedido = new Pedido(cliente,restaurante, itens,StatusPedido.PENDENTE, pedidoDTO.observacoes(), taxaDeEntrega, pedidoDTO.EnderecoDeEntrega()); 
+
+        return new PedidoDTO(
+            pedido.getId(),
+            pedido.getNumeroPedido(),
+            pedido.getDataPedido(),
+            pedido.getStatus(),
+            pedido.getValorTotal(),
+            pedido.getObservacoes(),
+            pedido.getEnderecoDeEntrega(),
+            pedido.getCliente().getId(),
+            pedido.getRestaurante().getId(),
+            pedidoDTO.itens()
+        );
+    }
 }
