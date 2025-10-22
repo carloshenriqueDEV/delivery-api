@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.deliverytech.delivery_api.service.ProdutoService;
 import com.deliverytech.delivery_api.service.dtos.ProdutoDTO;
+import com.deliverytech.delivery_api.service.dtos.ProdutoResponseDTO;
 
 import jakarta.validation.Valid;
 
@@ -29,34 +30,34 @@ public class ProdutoController {
     private ProdutoService produtoService;
 
     @PostMapping()
-    public ResponseEntity<ProdutoDTO> cadastrar(@Valid @RequestBody ProdutoDTO produtoDTO){
-        ProdutoDTO produto = produtoService.cadastrar(produtoDTO, produtoDTO.restaurante().id());
+    public ResponseEntity<ProdutoResponseDTO> cadastrar(@Valid @RequestBody ProdutoDTO produtoDTO){
+        ProdutoResponseDTO produto = produtoService.cadastrar(produtoDTO, produtoDTO.restaurante().id());
         return ResponseEntity.status(HttpStatus.CREATED).body(produto);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ProdutoDTO> buscarPorId(@PathVariable Long id) {
-        ProdutoDTO produto = produtoService.buscarPorId(id);
+    public ResponseEntity<ProdutoResponseDTO> buscarPorId(@PathVariable Long id) {
+        ProdutoResponseDTO produto = produtoService.buscarPorId(id);
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(produto);
     }
 
-    @GetMapping("/{restauranteId}/produtos")
-    public ResponseEntity<List<ProdutoDTO>> produtosPorRestaurante(@PathVariable long restauranteId) {
-        List<ProdutoDTO> produtos = produtoService.buscarProdutosPorRestaurante(restauranteId);
+    @GetMapping("/{restauranteId}")
+    public ResponseEntity<List<ProdutoResponseDTO>> produtosPorRestaurante(@PathVariable long restauranteId) {
+        List<ProdutoResponseDTO> produtos = produtoService.buscarProdutosPorRestaurante(restauranteId);
 
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(produtos);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ProdutoDTO> atualizarProduto(@Valid @RequestBody ProdutoDTO produtoDTO){
-        ProdutoDTO produto = produtoService.atualizar(produtoDTO);
+    public ResponseEntity<ProdutoResponseDTO> atualizarProduto(@PathVariable Long id, @Valid @RequestBody ProdutoDTO produtoDTO){
+        ProdutoResponseDTO produto = produtoService.atualizar(id, produtoDTO);
 
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(produto);
     }
     
     @PatchMapping("/{id}/disponibilidade/{value}")
-    public ResponseEntity<ProdutoDTO> alterarDisponibilidade(@PathVariable Long id, @PathVariable boolean value){
-        ProdutoDTO produto = produtoService.alterarDisponibilidade(id, value);
+    public ResponseEntity<ProdutoResponseDTO> alterarDisponibilidade(@PathVariable Long id, @PathVariable boolean value){
+        ProdutoResponseDTO produto = produtoService.alterarDisponibilidade(id, value);
 
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(produto);
     }

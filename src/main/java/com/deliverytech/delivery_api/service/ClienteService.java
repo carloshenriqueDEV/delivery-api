@@ -1,11 +1,11 @@
 package com.deliverytech.delivery_api.service;
 
-import com.deliverytech.delivery_api.entity.Cliente; 
+import com.deliverytech.delivery_api.entity.Cliente;
 import com.deliverytech.delivery_api.repository.ClienteRepository;
 import com.deliverytech.delivery_api.service.dtos.ClienteDTO;
+import com.deliverytech.delivery_api.service.dtos.ClienteResponseDTO;
 import com.deliverytech.delivery_api.service.interfaces.ClienteServiceInterface;
 
-import org.springframework.beans.factory.annotation.Autowired; 
 import org.springframework.stereotype.Service; 
 import org.springframework.transaction.annotation.Transactional; 
  
@@ -16,33 +16,29 @@ import java.util.Optional;
 @Transactional 
 public class ClienteService implements ClienteServiceInterface { 
  
-    @Autowired 
     private ClienteRepository clienteRepository; 
+
+    public ClienteService(ClienteRepository clienteRepository){
+        this.clienteRepository = clienteRepository;
+    }
  
     /** 
      * Cadastrar novo cliente 
      */ 
     @Override
-    public ClienteDTO cadastrar(ClienteDTO clienteDto) { 
+    public ClienteResponseDTO cadastrar(ClienteDTO clienteDto) { 
 
         //valição contra o banco
         if (clienteRepository.existsByEmail(clienteDto.email())) { 
             throw new IllegalArgumentException("Email já cadastrado"); 
         } 
-
-        var cliente = new Cliente(clienteDto.nome(), clienteDto.email(), clienteDto.telefone(), clienteDto.endereco());
+        
+        Cliente cliente = new Cliente(clienteDto.nome(), clienteDto.email(), clienteDto.telefone(), clienteDto.getEndereco());
         
         
        cliente = clienteRepository.save(cliente);
         
-        return new ClienteDTO(
-            cliente.getId(),
-            cliente.getNome(),
-            cliente.getEmail(),
-            cliente.getTelefone(),
-            cliente.isAtivo(),
-            cliente.getEndereco()
-        );
+        return ClienteResponseDTO.fromEntity(cliente);
     } 
  
     /** 
@@ -50,7 +46,7 @@ public class ClienteService implements ClienteServiceInterface {
      */ 
     @Transactional(readOnly = true) 
     @Override
-    public Optional<ClienteDTO> buscarPorId(Long id) { 
+    public Optional<ClienteResponseDTO> buscarPorId(Long id) { 
 
         var cliente = clienteRepository.findById(id);
         if (cliente.isEmpty()) {
@@ -58,14 +54,7 @@ public class ClienteService implements ClienteServiceInterface {
         }
 
         return cliente
-                .map(c -> new ClienteDTO(
-                    c.getId(),
-                    c.getNome(),
-                    c.getEmail(),
-                    c.getTelefone(),
-                    c.isAtivo(),
-                    c.getEndereco()
-                )); 
+                .map(c -> ClienteResponseDTO.fromEntity(c)); 
     } 
  
     /** 
@@ -73,21 +62,14 @@ public class ClienteService implements ClienteServiceInterface {
      */ 
     @Transactional(readOnly = true) 
     @Override
-    public Optional<ClienteDTO> buscarPorEmail(String email) { 
+    public Optional<ClienteResponseDTO> buscarPorEmail(String email) { 
         var cliente = clienteRepository.findByEmail(email);
 
         if (cliente.isEmpty()) {
             throw new IllegalArgumentException("Cliente não encontrado.");
         }
         return cliente
-                .map(c -> new ClienteDTO(
-                    c.getId(),
-                    c.getNome(),
-                    c.getEmail(),
-                    c.getTelefone(),
-                    c.isAtivo(),
-                    c.getEndereco()
-                )); 
+                .map(c -> ClienteResponseDTO.fromEntity(c)); 
     } 
  
     /** 
@@ -95,17 +77,10 @@ public class ClienteService implements ClienteServiceInterface {
      */ 
     @Transactional(readOnly = true) 
     @Override
-    public List<ClienteDTO> listarAtivos() {
+    public List<ClienteResponseDTO> listarAtivos() {
         return clienteRepository.findByAtivoTrue()
                 .stream()
-                .map(c -> new ClienteDTO(
-                    c.getId(),
-                    c.getNome(),
-                    c.getEmail(),
-                    c.getTelefone(),
-                    c.isAtivo(),
-                    c.getEndereco() 
-                ))
+                .map(c -> ClienteResponseDTO.fromEntity(c))
                 .toList();
     }
 
@@ -114,8 +89,8 @@ public class ClienteService implements ClienteServiceInterface {
      * Atualizar dados do cliente 
      */ 
     @Override
-    public ClienteDTO atualizar(ClienteDTO clienteAtualizado) { 
-        Cliente cliente = clienteRepository.findById(clienteAtualizado.id()) 
+    public ClienteResponseDTO atualizar(Long id, ClienteDTO clienteAtualizado) { 
+        Cliente cliente = clienteRepository.findById(id) 
             .orElseThrow(() -> new IllegalArgumentException("Cliente não encontrado: ")); 
  
         // Verificar se email não está sendo usado por outro cliente 
@@ -125,15 +100,12 @@ public class ClienteService implements ClienteServiceInterface {
             clienteAtualizado.email()); 
         } 
  
-        // Atualizar campos 
-        cliente.setNome(clienteAtualizado.nome()); 
-        cliente.setEmail(clienteAtualizado.email()); 
-        cliente.setTelefone(clienteAtualizado.telefone()); 
-        cliente.setEndereco(clienteAtualizado.endereco()); 
+        Cliente novaVersaoCliente = new Cliente(clienteAtualizado.nome(), clienteAtualizado.email(), clienteAtualizado.telefone(), clienteAtualizado.getEndereco());
+        novaVersaoCliente.setId(id);
         
-        clienteRepository.save(cliente); 
+        clienteRepository.save(novaVersaoCliente); 
 
-        return clienteAtualizado;
+        return ClienteResponseDTO.fromEntity(novaVersaoCliente);
     } 
  
     /** 
@@ -141,17 +113,11 @@ public class ClienteService implements ClienteServiceInterface {
      */ 
     @Transactional(readOnly = true) 
     @Override
-    public List<ClienteDTO> buscarPorNome(String nome) { 
+    public List<ClienteResponseDTO> buscarPorNome(String nome) { 
         return clienteRepository.findByNomeContainingIgnoreCase(nome)
         .stream()
-        .map(c -> new ClienteDTO( 
-            c.getId(), 
-            c.getNome(), 
-            c.getEmail(), 
-            c.getTelefone(), 
-            c.isAtivo(),
-            c.getEndereco() 
-        )).toList(); 
+        .map(c -> ClienteResponseDTO.fromEntity(c)
+        ).toList(); 
     } 
 
     /**

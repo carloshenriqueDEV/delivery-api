@@ -14,7 +14,6 @@ public class Restaurante {
     private Long id; 
     private String nome; 
     private String categoria; 
-    private String endereco; 
     private String telefone; 
     private BigDecimal taxaEntrega; 
     private boolean ativo; 
@@ -25,7 +24,7 @@ public class Restaurante {
     }
 
     // 🔹 Construtor de uso da aplicação (Service, Controller etc.)
-    public Restaurante(String nome, String categoria, String endereco, String telefone, BigDecimal taxaEntrega) {
+    public Restaurante(String nome, String categoria, Endereco endereco, String telefone, BigDecimal taxaEntrega) {
         this.validarDadosRestaurante(nome, taxaEntrega);
 
         this.nome = nome;
@@ -42,6 +41,10 @@ public class Restaurante {
  
     @OneToMany(mappedBy = "restaurante") 
     private List<Pedido> pedidos; 
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "endereco_id", referencedColumnName = "id")
+    private Endereco endereco;
 
     public void ativar() { 
         this.ativo = true; 

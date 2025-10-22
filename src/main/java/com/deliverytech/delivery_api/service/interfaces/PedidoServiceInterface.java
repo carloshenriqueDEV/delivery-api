@@ -4,13 +4,14 @@ import java.util.List;
 
 import com.deliverytech.delivery_api.enums.StatusPedido;
 import com.deliverytech.delivery_api.service.dtos.PedidoDTO;
+import com.deliverytech.delivery_api.service.dtos.PedidoResponseDTO;
 
 public interface PedidoServiceInterface {
-   PedidoDTO criarPedido(PedidoDTO dto);
-   PedidoDTO buscarPorId(Long id);
-   List<PedidoDTO> buscarPorCliente(Long clienteId) ;
-   PedidoDTO adicionarItem(Long pedidoId, Long produtoId, Integer quantidade);
-   PedidoDTO buscarPorNumero(String numeroPedido);
-   PedidoDTO atualizarStatus(Long pedidoId, StatusPedido status, String motivo);
-   PedidoDTO calcularTotalPedido(PedidoDTO pedidoDTO);
+   PedidoResponseDTO criarPedido(PedidoDTO dto);
+   PedidoResponseDTO buscarPorId(Long id);
+   List<PedidoResponseDTO> buscarPorCliente(Long clienteId) ;
+   PedidoResponseDTO adicionarItem(Long pedidoId, Long produtoId, Integer quantidade);
+   PedidoResponseDTO buscarPorNumero(String numeroPedido);
+   PedidoResponseDTO atualizarStatus(Long pedidoId, StatusPedido status, String motivo);
+   PedidoResponseDTO calcularTotalPedido(PedidoDTO pedidoDTO);
 }

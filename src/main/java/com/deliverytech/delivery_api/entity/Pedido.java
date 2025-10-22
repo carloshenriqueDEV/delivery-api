@@ -26,7 +26,6 @@ public class Pedido {
     @Enumerated(EnumType.STRING) 
     private StatusPedido status;
     private BigDecimal valorTotal;
-    private String EnderecoDeEntrega;
     private BigDecimal taxaDeEntrega;
     private String observacoes;  
    
@@ -46,6 +45,10 @@ public class Pedido {
         return observacoes;
     }
 
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "endereco_entrega_id", referencedColumnName = "id")
+    private Endereco enderecoDeEntrega;
+
     public void setObservacoes(String observacoes) {
         this.observacoes = observacoes;
     }
@@ -63,14 +66,14 @@ public class Pedido {
         
     }
 
-    public Pedido(Cliente cliente, Restaurante restaurante, List<ItemPedido> itens, StatusPedido statusPedido, String observacoes, BigDecimal taxaDeEntrega, String enderecoDeEntrega) {
+    public Pedido(Cliente cliente, Restaurante restaurante, List<ItemPedido> itens, StatusPedido statusPedido, String observacoes, BigDecimal taxaDeEntrega, Endereco enderecoDeEntrega) {
         
         this.validarDados(cliente, restaurante, itens);
         this.validarStatus(statusPedido, null);
         this.observacoes = observacoes;
         this.cliente = cliente;
         this.restaurante = restaurante;
-        this.EnderecoDeEntrega = enderecoDeEntrega;
+        this.enderecoDeEntrega = enderecoDeEntrega;
         this.taxaDeEntrega = taxaDeEntrega;
         this.itens = itens;
         this.status = statusPedido;
@@ -136,7 +139,6 @@ public class Pedido {
         validarStatus(status, motivo);
         this.status = status;
     }
-
     //Regras de negócio
     private void validarDados(Cliente cliente, Restaurante restaurante, List<ItemPedido> itens) {
         validarClienteAtivo(cliente);

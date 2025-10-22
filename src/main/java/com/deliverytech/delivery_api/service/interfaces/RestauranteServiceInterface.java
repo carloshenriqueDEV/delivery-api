@@ -3,15 +3,16 @@ import java.math.BigDecimal;
 import java.util.List;
 
 import com.deliverytech.delivery_api.service.dtos.RestauranteDTO;
+import com.deliverytech.delivery_api.service.dtos.RestauranteResponseDTO;
 
 public interface RestauranteServiceInterface {
-    RestauranteDTO cadastrar(RestauranteDTO restauranteDto);
-    RestauranteDTO buscarPorId(Long id);
-    List<RestauranteDTO> buscarPorCategoria(String categoria);
-    List<RestauranteDTO> listarDistponiveis();
-    RestauranteDTO atualizar(RestauranteDTO restauranteDto);
+    RestauranteResponseDTO cadastrar(RestauranteDTO restauranteDto);
+    RestauranteResponseDTO buscarPorId(Long id);
+    List<RestauranteResponseDTO> buscarPorCategoria(String categoria);
+    List<RestauranteResponseDTO> listarDistponiveis();
+    RestauranteResponseDTO atualizar(Long id, RestauranteDTO restauranteDto);
     void inativar(Long id);
-    RestauranteDTO buscarProdutos(Long id);
+    RestauranteResponseDTO buscarProdutos(Long id);
     BigDecimal calcularTaxaDeEntrega(Long id, String cepCliente);
 
 }

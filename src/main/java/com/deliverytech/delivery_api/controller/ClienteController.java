@@ -2,6 +2,7 @@ package com.deliverytech.delivery_api.controller;
 
 import com.deliverytech.delivery_api.service.ClienteService;
 import com.deliverytech.delivery_api.service.dtos.ClienteDTO;
+import com.deliverytech.delivery_api.service.dtos.ClienteResponseDTO;
 
 import org.springframework.beans.factory.annotation.Autowired; 
 import org.springframework.http.HttpStatus; 
@@ -25,8 +26,8 @@ public class ClienteController {
      * Cadastrar novo cliente 
      */ 
     @PostMapping 
-    public ResponseEntity<?> cadastrar(@Valid @RequestBody ClienteDTO cliente) {       
-        ClienteDTO clienteSalvo = clienteService.cadastrar(cliente); 
+    public ResponseEntity<ClienteResponseDTO> cadastrar(@Valid @RequestBody ClienteDTO cliente) {       
+        ClienteResponseDTO clienteSalvo = clienteService.cadastrar(cliente); 
         return ResponseEntity.status(HttpStatus.CREATED).body(clienteSalvo); 
     } 
  
@@ -34,8 +35,8 @@ public class ClienteController {
      * Listar todos os clientes a vos 
      */ 
     @GetMapping 
-    public ResponseEntity<List<ClienteDTO>> listar() { 
-        List<ClienteDTO> clientes = clienteService.listarAtivos(); 
+    public ResponseEntity<List<ClienteResponseDTO>> listar() { 
+        List<ClienteResponseDTO> clientes = clienteService.listarAtivos(); 
         return ResponseEntity.ok(clientes); 
     } 
  
@@ -43,8 +44,8 @@ public class ClienteController {
      * Buscar cliente por ID 
      */ 
     @GetMapping("/{id}") 
-    public ResponseEntity<?> buscarPorId(@PathVariable Long id) { 
-        Optional<ClienteDTO> cliente = clienteService.buscarPorId(id); 
+    public ResponseEntity<ClienteResponseDTO> buscarPorId(@PathVariable Long id) { 
+        Optional<ClienteResponseDTO> cliente = clienteService.buscarPorId(id); 
             return ResponseEntity.ok(cliente.get()); 
     } 
  
@@ -55,7 +56,7 @@ public class ClienteController {
     public ResponseEntity<?> atualizar(@PathVariable Long id, 
                                       @Valid @RequestBody ClienteDTO cliente) { 
     
-        ClienteDTO clienteAtualizado = clienteService.atualizar(cliente); 
+        ClienteResponseDTO clienteAtualizado = clienteService.atualizar(id, cliente); 
         return ResponseEntity.ok(clienteAtualizado); 
      
     } 
@@ -73,8 +74,8 @@ public class ClienteController {
      * Buscar clientes por nome 
      */ 
     @GetMapping("/buscar") 
-    public ResponseEntity<List<ClienteDTO>> buscarPorNome(@RequestParam String nome) { 
-        List<ClienteDTO> clientes = clienteService.buscarPorNome(nome); 
+    public ResponseEntity<List<ClienteResponseDTO>> buscarPorNome(@RequestParam String nome) { 
+        List<ClienteResponseDTO> clientes = clienteService.buscarPorNome(nome); 
         return ResponseEntity.ok(clientes); 
     } 
  
@@ -82,8 +83,8 @@ public class ClienteController {
      * Buscar cliente por email 
      */ 
     @GetMapping("/email/{email}") 
-    public ResponseEntity<?> buscarPorEmail(@PathVariable String email) { 
-        Optional<ClienteDTO> cliente = clienteService.buscarPorEmail(email); 
+    public ResponseEntity<ClienteResponseDTO> buscarPorEmail(@PathVariable String email) { 
+        Optional<ClienteResponseDTO> cliente = clienteService.buscarPorEmail(email); 
  
         return ResponseEntity.ok(cliente.get()); 
     } 

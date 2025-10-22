@@ -3,6 +3,7 @@ package com.deliverytech.delivery_api.entity;
 import jakarta.persistence.*; 
 import lombok.Data;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity 
@@ -15,7 +16,6 @@ public class Cliente {
     private String nome; 
     private String email; 
     private String telefone; 
-    private String endereco; 
     private boolean ativo; 
     @Column(name = "data_cadastro")
     private LocalDateTime dataCadastro;
@@ -25,14 +25,14 @@ public class Cliente {
     }
 
     // 🔹 Construtor de uso da aplicação (Service, Controller etc.)
-    public Cliente(String nome, String email, String telefone, String endereco) {
+    public Cliente(String nome, String email, String telefone, List<Endereco> enderecos) {
 
-        this.validarDadosCliente(nome, email, telefone, endereco);
+        this.validarDadosCliente(nome, email, telefone, enderecos);
 
         this.nome = nome;
         this.email = email;
         this.telefone = telefone;
-        this.endereco = endereco;
+        this.enderecos = enderecos;
         this.dataCadastro = LocalDateTime.now();
         this.ativo = true;
     }
@@ -44,10 +44,14 @@ public class Cliente {
         this.ativo = false; 
     }
 
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "cliente_id")
+    private List<Endereco> enderecos;
+
      /** 
      * Validações de negócio 
      */ 
-    private void validarDadosCliente(String nome, String email, String telefone, String endereco) { 
+    private void validarDadosCliente(String nome, String email, String telefone, List<Endereco> enderecos) { 
         validarNome(nome); 
         validarEmail(email);
     } 
@@ -65,8 +69,8 @@ public class Cliente {
     public String getTelefone() {
         return telefone;
     }
-    public String getEndereco() {
-        return endereco;
+    public List<Endereco> getEnderecos() {
+        return enderecos;
     }
     public boolean isAtivo() {
         return ativo;
@@ -77,23 +81,27 @@ public class Cliente {
         this.nome = nome;
     }
 
+    public void setEnderecos(List<Endereco> enderecos){
+        this.enderecos = enderecos;
+    }
+
     private void validarNome(String nome) { 
         if (nome == null || nome.trim().isEmpty()) { 
-            throw new IllegalArgumentException("Nome é obrigatório"); 
+            throw new IllegalArgumentException("Nome é obrigatório."); 
         } 
 
-        if (nome.length() < 2) { 
-            throw new IllegalArgumentException("Nome deve ter pelo menos 2 caracteres"); 
+        if (nome.length() < 2 || nome.length() > 100) { 
+            throw new IllegalArgumentException("Nome deve ter entre 2 a 100 caracteres."); 
         } 
     }
 
     private void validarEmail(String email) { 
         if (email == null || email.trim().isEmpty()) { 
-            throw new IllegalArgumentException("Email é obrigatório"); 
+            throw new IllegalArgumentException("Email é obrigatório."); 
         } 
 
         if (!email.contains("@") || !email.contains(".")) { 
-            throw new IllegalArgumentException("Email inválido"); 
+            throw new IllegalArgumentException("Email inválido."); 
         } 
     }
 

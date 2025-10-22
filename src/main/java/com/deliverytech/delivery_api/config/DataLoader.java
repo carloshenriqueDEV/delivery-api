@@ -11,6 +11,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
 import com.deliverytech.delivery_api.entity.Cliente;
+import com.deliverytech.delivery_api.entity.Endereco;
 import com.deliverytech.delivery_api.entity.ItemPedido;
 import com.deliverytech.delivery_api.entity.Pedido;
 import com.deliverytech.delivery_api.entity.Produto;
@@ -44,21 +45,21 @@ public class DataLoader implements CommandLineRunner{
         cliente1.setNome("João Carlos Santos");
         cliente1.setEmail("jc@email.com");
         cliente1.setTelefone("11999999999");
-        cliente1.setEndereco("Rua A, 231, São Paulo, SP");
+        cliente1.setEnderecos(new ArrayList<Endereco>());
         cliente1.setAtivo(true);
 
         Cliente cliente2 = new Cliente();
         cliente2.setNome("Maria Silva Oliveira");
         cliente2.setEmail("oli@emai.com");
         cliente2.setTelefone("11988888888");
-        cliente2.setEndereco("Av. B, 123, Rio de Janeiro, RJ");
+        cliente2.setEnderecos(new ArrayList<Endereco>());
         cliente2.setAtivo(true);
 
         Cliente cliente3 = new Cliente();
         cliente3.setNome("Pedro Souza Lima");   
         cliente3.setEmail("lima@email.com");
         cliente3.setTelefone("11977777777");
-        cliente3.setEndereco("Rua C, 456, Belo Horizonte, MG");
+        cliente3.setEnderecos(new ArrayList<Endereco>());
         cliente3.setAtivo(true);
 
         clienteRepository.saveAll(Arrays.asList(cliente1, cliente2, cliente3));
@@ -70,7 +71,7 @@ public class DataLoader implements CommandLineRunner{
         Restaurante restaurante1 = new Restaurante();
         restaurante1.setNome("Restaurante Bom Sabor");
         restaurante1.setCategoria("Comida Caseira");
-        restaurante1.setEndereco("Rua X, 100, São Paulo, SP");
+        restaurante1.setEndereco(new Endereco());
         restaurante1.setTelefone("1133333333");
         restaurante1.setTaxaEntrega(new BigDecimal("5.00"));
         restaurante1.setAtivo(true);
@@ -78,7 +79,7 @@ public class DataLoader implements CommandLineRunner{
         Restaurante restaurante2 = new Restaurante();
         restaurante2.setNome("Pizzaria Bella Italia");
         restaurante2.setCategoria("Pizza");
-        restaurante2.setEndereco("Av. Y, 200, Rio de Janeiro, RJ");
+        restaurante2.setEndereco(new Endereco());
         restaurante2.setTelefone("2122222222");
         restaurante2.setTaxaEntrega(new BigDecimal("7.50"));
         restaurante2.setAtivo(true);
@@ -118,7 +119,7 @@ public class DataLoader implements CommandLineRunner{
             List<ItemPedido> itensPedido1 = new ArrayList<ItemPedido>();
             itensPedido1.add(item);
 
-            Pedido pedido1 = new Pedido(clientes.get(i % clientes.size()), restaurante1, itensPedido1, StatusPedido.ENTREGUE, null, BigDecimal.valueOf(0), "Rua dos bobos número 0.");
+            Pedido pedido1 = new Pedido(clientes.get(i % clientes.size()), restaurante1, itensPedido1, StatusPedido.ENTREGUE, null, BigDecimal.valueOf(0), new Endereco());
             
             pedidoRepository.save(pedido1);
 

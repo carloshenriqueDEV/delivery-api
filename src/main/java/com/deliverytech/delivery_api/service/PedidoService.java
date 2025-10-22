@@ -9,10 +9,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.deliverytech.delivery_api.service.dtos.ItemPedidoDTO;
 import com.deliverytech.delivery_api.service.dtos.PedidoDTO;
+import com.deliverytech.delivery_api.service.dtos.PedidoResponseDTO;
 import com.deliverytech.delivery_api.service.interfaces.PedidoServiceInterface;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
 @Service 
 @Transactional 
@@ -37,7 +37,7 @@ public class PedidoService implements PedidoServiceInterface {
      * Criar novo pedido 
      */ 
     @Override
-    public PedidoDTO criarPedido( PedidoDTO pedidoDTO) { 
+    public PedidoResponseDTO criarPedido( PedidoDTO pedidoDTO) { 
         Cliente cliente = clienteRepository.findByIdAndAtivoTrue(pedidoDTO.clienteId()) 
             .orElseThrow(() -> new IllegalArgumentException("Cliente não encontrado: " + pedidoDTO.clienteId())); 
  
@@ -87,30 +87,19 @@ public class PedidoService implements PedidoServiceInterface {
             .toList();
        
         
-        BigDecimal taxaDeEntrega = restauranteService.calcularTaxaDeEntrega(restaurante.getId(), cliente.getEndereco());
+        BigDecimal taxaDeEntrega = restauranteService.calcularTaxaDeEntrega(restaurante.getId(), pedidoDTO.enderecoDeEntrega().cep());
             
-        Pedido pedido = new Pedido(cliente,restaurante, itens,StatusPedido.PENDENTE, pedidoDTO.observacoes(), taxaDeEntrega, pedidoDTO.EnderecoDeEntrega()); 
+        Pedido pedido = new Pedido(cliente,restaurante, itens,StatusPedido.PENDENTE, pedidoDTO.observacoes(), taxaDeEntrega, pedidoDTO.getEnderecoEntreDeEntraga()); 
 
         pedidoRepository.save(pedido);
 
-        return new PedidoDTO(
-            pedido.getId(),
-            pedido.getNumeroPedido(),
-            pedido.getDataPedido(),
-            pedido.getStatus(),
-            pedido.getValorTotal(),
-            pedido.getObservacoes(),
-            pedido.getEnderecoDeEntrega(),
-            pedido.getCliente().getId(),
-            pedido.getRestaurante().getId(),
-            pedidoDTO.itens()
-        );
+        return  PedidoResponseDTO.fromEntity(pedido);
     } 
  
     /** 
      * Adicionar item ao pedido 
      */ 
-    public PedidoDTO adicionarItem(Long pedidoId, Long produtoId, Integer quantidade) { 
+    public PedidoResponseDTO adicionarItem(Long pedidoId, Long produtoId, Integer quantidade) { 
         Pedido pedido = pedidoRepository.findById(pedidoId)
             .orElseThrow(() -> new IllegalArgumentException("Pedido não encontrado: " + pedidoId)); 
  
@@ -139,26 +128,7 @@ public class PedidoService implements PedidoServiceInterface {
  
         pedido.adicionarItem(item); 
         pedidoRepository.save(pedido);
-        return new PedidoDTO(
-            pedido.getId(),
-            pedido.getNumeroPedido(),
-            pedido.getDataPedido(),
-            pedido.getStatus(),
-            pedido.getValorTotal(),
-            pedido.getObservacoes(),
-            pedido.getEnderecoDeEntrega(),
-            pedido.getCliente().getId(),
-            pedido.getRestaurante().getId(),
-            pedido.getItens().stream()
-                .map(i -> new ItemPedidoDTO(
-                    item.getId(),
-                    item.getQuantidade(),
-                    item.getPrecoUnitario(),
-                    item.getSubtotal(),
-                    item.getProduto().getId()
-                ))
-                .toList()
-        ); 
+        return PedidoResponseDTO.fromEntity(pedido);
     } 
     
     /** 
@@ -166,30 +136,11 @@ public class PedidoService implements PedidoServiceInterface {
      */ 
     @Transactional(readOnly = true) 
     @Override
-    public PedidoDTO buscarPorId(Long id) { 
+    public PedidoResponseDTO buscarPorId(Long id) { 
         Pedido pedido = pedidoRepository.buscarPedidoCompleto(id)
             .orElseThrow(() -> new IllegalArgumentException("Pedido não encontrado: " + id));        
 
-        return new PedidoDTO(
-                pedido.getId(),
-                pedido.getNumeroPedido(),
-                pedido.getDataPedido(),
-                pedido.getStatus(),
-                pedido.getValorTotal(),
-                pedido.getObservacoes(),
-                pedido.getEnderecoDeEntrega(),
-                pedido.getCliente().getId(),
-                pedido.getRestaurante().getId(),
-                pedido.getItens().stream()
-                        .map(item -> new ItemPedidoDTO(
-                                item.getId(),
-                                item.getQuantidade(),
-                                item.getPrecoUnitario(),
-                                item.getSubtotal(),
-                                item.getProduto().getId()
-                        ))
-                        .toList()
-        );
+        return PedidoResponseDTO.fromEntity(pedido);
     } 
  
     /** 
@@ -197,24 +148,13 @@ public class PedidoService implements PedidoServiceInterface {
      */ 
     @Transactional(readOnly = true) 
     @Override
-    public List<PedidoDTO> buscarPorCliente(Long clienteId) { 
+    public List<PedidoResponseDTO> buscarPorCliente(Long clienteId) { 
         var cliente = clienteRepository.findById(clienteId)
             .orElseThrow(() -> new IllegalArgumentException("Cliente não encontrado: " + clienteId));
             
         return pedidoRepository.findByClienteOrderByDataPedidoDesc(cliente)
             .stream()
-            .map(p -> new PedidoDTO(
-                p.getId(),
-                p.getNumeroPedido(),
-                p.getDataPedido(),
-                p.getStatus(),
-                p.getValorTotal(),
-                p.getObservacoes(),
-                p.getEnderecoDeEntrega(),
-                p.getCliente().getId(),
-                p.getRestaurante().getId(),
-                new ArrayList<ItemPedidoDTO>()
-            ))
+            .map(p -> PedidoResponseDTO.fromEntity(p))
             .toList(); 
     } 
  
@@ -223,65 +163,27 @@ public class PedidoService implements PedidoServiceInterface {
      */ 
     @Transactional(readOnly = true) 
     @Override
-    public PedidoDTO buscarPorNumero(String numeroPedido) { 
+    public PedidoResponseDTO buscarPorNumero(String numeroPedido) { 
         Pedido pedido = pedidoRepository.findByNumeroPedido(numeroPedido)
             .orElseThrow(() -> new IllegalArgumentException("Pedido não encontrado: " + numeroPedido));
 
-        return new PedidoDTO(
-            pedido.getId(),
-            pedido.getNumeroPedido(),
-            pedido.getDataPedido(),
-            pedido.getStatus(),
-            pedido.getValorTotal(),
-            pedido.getObservacoes(),
-            pedido.getEnderecoDeEntrega(),
-            pedido.getCliente().getId(),
-             pedido.getRestaurante().getId(),
-            pedido.getItens().stream()
-                .map(i -> new ItemPedidoDTO(
-                    i.getId(),
-                    i.getQuantidade(),
-                    i.getPrecoUnitario(),
-                    i.getSubtotal(),
-                    i.getProduto().getId()
-                ))
-                .toList()
-        );
+        return PedidoResponseDTO.fromEntity(pedido);
         
     } 
  
   
     @Override
-    public PedidoDTO atualizarStatus(Long pedidoId, StatusPedido status, String motivo) {
+    public PedidoResponseDTO atualizarStatus(Long pedidoId, StatusPedido status, String motivo) {
          Pedido pedido = pedidoRepository.buscarPedidoCompleto(pedidoId)
             .orElseThrow(() -> new IllegalArgumentException("Pedido não encontrado: " + pedidoId)); 
         
         pedido.setStatus(status, motivo);
         pedidoRepository.save(pedido);
 
-        return new PedidoDTO(
-            pedido.getId(),
-            pedido.getNumeroPedido(),
-            pedido.getDataPedido(),
-            pedido.getStatus(),
-            pedido.getValorTotal(),
-            pedido.getObservacoes(),
-            pedido.getEnderecoDeEntrega(),
-            pedido.getCliente().getId(),
-            pedido.getRestaurante().getId(),
-            pedido.getItens().stream()
-                .map(i -> new ItemPedidoDTO(
-                    i.getId(),
-                    i.getQuantidade(),
-                    i.getPrecoUnitario(),
-                    i.getSubtotal(),
-                    i.getProduto().getId()
-                ))
-                .toList()
-        ); 
+        return PedidoResponseDTO.fromEntity(pedido);
     } 
 
-    public  PedidoDTO calcularTotalPedido(PedidoDTO pedidoDTO){
+    public  PedidoResponseDTO calcularTotalPedido(PedidoDTO pedidoDTO){
         Cliente cliente = clienteRepository.findByIdAndAtivoTrue(pedidoDTO.clienteId()) 
             .orElseThrow(() -> new IllegalArgumentException("Cliente não encontrado: " + pedidoDTO.clienteId())); 
  
@@ -326,21 +228,10 @@ public class PedidoService implements PedidoServiceInterface {
             })
             .toList();
        
-        BigDecimal taxaDeEntrega = restauranteService.calcularTaxaDeEntrega(restaurante.getId(), cliente.getEndereco());
+        BigDecimal taxaDeEntrega = restauranteService.calcularTaxaDeEntrega(restaurante.getId(), pedidoDTO.enderecoDeEntrega().cep());
 
-        Pedido pedido = new Pedido(cliente,restaurante, itens,StatusPedido.PENDENTE, pedidoDTO.observacoes(), taxaDeEntrega, pedidoDTO.EnderecoDeEntrega()); 
+        Pedido pedido = new Pedido(cliente,restaurante, itens,StatusPedido.PENDENTE, pedidoDTO.observacoes(), taxaDeEntrega, pedidoDTO.getEnderecoEntreDeEntraga()); 
 
-        return new PedidoDTO(
-            pedido.getId(),
-            pedido.getNumeroPedido(),
-            pedido.getDataPedido(),
-            pedido.getStatus(),
-            pedido.getValorTotal(),
-            pedido.getObservacoes(),
-            pedido.getEnderecoDeEntrega(),
-            pedido.getCliente().getId(),
-            pedido.getRestaurante().getId(),
-            pedidoDTO.itens()
-        );
+        return PedidoResponseDTO.fromEntity(pedido);
     }
 }

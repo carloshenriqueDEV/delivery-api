@@ -4,14 +4,15 @@ import java.math.BigDecimal;
 import java.util.List;
 
 import com.deliverytech.delivery_api.service.dtos.ProdutoDTO;
+import com.deliverytech.delivery_api.service.dtos.ProdutoResponseDTO;
 
 public interface ProdutoServiceInterface {
-    ProdutoDTO cadastrar(ProdutoDTO produtoDTO, Long restauranteId);
-    ProdutoDTO atualizar(ProdutoDTO produto);
+    ProdutoResponseDTO cadastrar(ProdutoDTO produtoDTO, Long restauranteId);
+    ProdutoResponseDTO atualizar(Long id, ProdutoDTO produto);
     void remover(Long id);
-    ProdutoDTO buscarPorId(Long id);   
-    List<ProdutoDTO> buscarProdutosPorRestaurante(Long restauranteId);
-    List<ProdutoDTO> buscarPorCategoria(String categoria);
-    ProdutoDTO alterarDisponibilidade(Long produtoId, boolean disponivel);
-    List<ProdutoDTO> buscarPorFaixaPreco(BigDecimal precoMin, BigDecimal precoMax);
+    ProdutoResponseDTO buscarPorId(Long id);   
+    List<ProdutoResponseDTO> buscarProdutosPorRestaurante(Long restauranteId);
+    List<ProdutoResponseDTO> buscarPorCategoria(String categoria);
+    ProdutoResponseDTO alterarDisponibilidade(Long produtoId, boolean disponivel);
+    List<ProdutoResponseDTO> buscarPorFaixaPreco(BigDecimal precoMin, BigDecimal precoMax);
 }

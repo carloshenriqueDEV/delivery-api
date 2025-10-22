@@ -3,14 +3,15 @@ package com.deliverytech.delivery_api.service.interfaces;
 import java.util.List;
 import java.util.Optional;
 import com.deliverytech.delivery_api.service.dtos.ClienteDTO;
+import com.deliverytech.delivery_api.service.dtos.ClienteResponseDTO;
 
 public interface ClienteServiceInterface {
-    ClienteDTO cadastrar(ClienteDTO clienteDto);
-    Optional<ClienteDTO> buscarPorId(Long id);
-    Optional<ClienteDTO> buscarPorEmail(String email);
-    ClienteDTO atualizar(ClienteDTO clienteAtualizado);
+    ClienteResponseDTO cadastrar(ClienteDTO clienteDto);
+    Optional<ClienteResponseDTO> buscarPorId(Long id);
+    Optional<ClienteResponseDTO> buscarPorEmail(String email);
+    ClienteResponseDTO atualizar(Long id, ClienteDTO clienteAtualizado);
     void ativarDesativar(Long id);
-    Iterable<ClienteDTO> listarAtivos();
-    List<ClienteDTO> buscarPorNome(String nome);
+    Iterable<ClienteResponseDTO> listarAtivos();
+    List<ClienteResponseDTO> buscarPorNome(String nome);
 
 }

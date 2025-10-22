@@ -3,8 +3,8 @@ package com.deliverytech.delivery_api.service;
 import com.deliverytech.delivery_api.entity.Restaurante;
 import com.deliverytech.delivery_api.external.DistanceApiClient;
 import com.deliverytech.delivery_api.repository.RestauranteRepository;
-import com.deliverytech.delivery_api.service.dtos.ProdutoDTO;
 import com.deliverytech.delivery_api.service.dtos.RestauranteDTO;
+import com.deliverytech.delivery_api.service.dtos.RestauranteResponseDTO;
 import com.deliverytech.delivery_api.service.interfaces.RestauranteServiceInterface;
 
 import org.springframework.beans.factory.annotation.Autowired; 
@@ -27,33 +27,23 @@ public class RestauranteService implements RestauranteServiceInterface {
      * Cadastrar novo restaurante 
      */ 
     @Override
-    public RestauranteDTO cadastrar(RestauranteDTO restauranteDTO) { 
+    public RestauranteResponseDTO cadastrar(RestauranteDTO restauranteDTO) { 
         // Validar nome único 
         if (restauranteRepository.findByNome(restauranteDTO.nome()).isPresent()) { 
             throw new IllegalArgumentException("Restaurante já cadastrado: " + 
                 restauranteDTO.nome()); 
         } 
-        var restaurante = new Restaurante(
+        Restaurante restaurante = new Restaurante(
             restauranteDTO.nome(),
             restauranteDTO.categoria(),
-            restauranteDTO.endereco(),
+            restauranteDTO.getEndereco(),
             restauranteDTO.telefone(),
             restauranteDTO.taxaEntrega()
         );
 
         restauranteRepository.save(restaurante); 
  
-        return new RestauranteDTO( 
-            restaurante.getId(), 
-            restaurante.getNome(), 
-            restaurante.getCategoria(), 
-            restaurante.getEndereco(), 
-            restaurante.getTelefone(), 
-            restaurante.getTaxaEntrega(),
-            restaurante.isAtivo(),
-            null,
-            null
-        );
+        return RestauranteResponseDTO.fromEntity(restaurante);
     } 
  
     /** 
@@ -61,21 +51,11 @@ public class RestauranteService implements RestauranteServiceInterface {
      */ 
     @Transactional(readOnly = true) 
     @Override
-    public RestauranteDTO buscarPorId(Long id) { 
-       var restaurante = restauranteRepository.findById(id)
+    public RestauranteResponseDTO buscarPorId(Long id) { 
+       Restaurante restaurante = restauranteRepository.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("Restaurante não encontrado: " + id)); 
          
-        return new RestauranteDTO( 
-            restaurante.getId(), 
-            restaurante.getNome(), 
-            restaurante.getCategoria(), 
-            restaurante.getEndereco(), 
-            restaurante.getTelefone(), 
-            restaurante.getTaxaEntrega(),
-            restaurante.isAtivo(),
-            restaurante.getAvaliacao(),
-            null
-        );
+        return RestauranteResponseDTO.fromEntity(restaurante);
     } 
  
     /** 
@@ -83,20 +63,10 @@ public class RestauranteService implements RestauranteServiceInterface {
      */ 
     @Transactional(readOnly = true) 
     @Override
-    public List<RestauranteDTO> listarDistponiveis() { 
+    public List<RestauranteResponseDTO> listarDistponiveis() { 
         return restauranteRepository.findByAtivoTrue()
             .stream() 
-            .map(r -> new RestauranteDTO( 
-                r.getId(), 
-                r.getNome(), 
-                r.getCategoria(), 
-                r.getEndereco(), 
-                r.getTelefone(), 
-                r.getTaxaEntrega(),
-                r.isAtivo(),
-                r.getAvaliacao(),
-                null
-            )) 
+            .map(r -> RestauranteResponseDTO.fromEntity(r)) 
             .toList(); 
     } 
  
@@ -105,20 +75,10 @@ public class RestauranteService implements RestauranteServiceInterface {
      */ 
     @Transactional(readOnly = true) 
     @Override
-    public List<RestauranteDTO> buscarPorCategoria(String categoria) { 
+    public List<RestauranteResponseDTO> buscarPorCategoria(String categoria) { 
         return restauranteRepository.findByCategoriaAndAtivoTrue(categoria)
             .stream() 
-            .map(r -> new RestauranteDTO( 
-                r.getId(), 
-                r.getNome(), 
-                r.getCategoria(), 
-                r.getEndereco(), 
-                r.getTelefone(), 
-                r.getTaxaEntrega(),
-                r.isAtivo(),
-                r.getAvaliacao(),
-                null
-            )) 
+            .map(r -> RestauranteResponseDTO.fromEntity(r)) 
             .toList(); 
     } 
  
@@ -126,8 +86,8 @@ public class RestauranteService implements RestauranteServiceInterface {
      * Atualizar restaurante 
      */ 
     @Override
-    public RestauranteDTO atualizar(RestauranteDTO restauranteAtualizado) { 
-        Restaurante restaurante = restauranteRepository.findById(restauranteAtualizado.id())
+    public RestauranteResponseDTO atualizar(Long id, RestauranteDTO restauranteAtualizado) { 
+        Restaurante restaurante = restauranteRepository.findByIdAndAtivoTrue(id)
             .orElseThrow(() -> new IllegalArgumentException("Restaurante não encontrado: " + restauranteAtualizado.id())); 
  
         // Verificar nome único (se mudou) 
@@ -136,17 +96,20 @@ public class RestauranteService implements RestauranteServiceInterface {
             throw new IllegalArgumentException("Nome já cadastrado: " + 
             restauranteAtualizado.nome()); 
         } 
- 
-        restaurante.setNome(restauranteAtualizado.nome()); 
-        restaurante.setCategoria(restauranteAtualizado.categoria()); 
-        restaurante.setEndereco(restauranteAtualizado.endereco()); 
-        restaurante.setTelefone(restauranteAtualizado.telefone()); 
-        restaurante.setTaxaEntrega(restauranteAtualizado.taxaEntrega());
-        restaurante.ativar(); 
+        
+        Restaurante novaVersaoRestaurante = new Restaurante(
+            restauranteAtualizado.nome(),
+            restauranteAtualizado.categoria(),
+            restauranteAtualizado.getEndereco(),
+            restauranteAtualizado.telefone(),
+            restauranteAtualizado.taxaEntrega()
+        );
 
-        restauranteRepository.save(restaurante);
+        novaVersaoRestaurante.setId(id);
 
-        return  restauranteAtualizado;
+        restauranteRepository.save(novaVersaoRestaurante);
+
+        return  RestauranteResponseDTO.fromEntity(novaVersaoRestaurante);
     } 
  
     /** 
@@ -162,33 +125,18 @@ public class RestauranteService implements RestauranteServiceInterface {
     }
 
     @Override
-    public RestauranteDTO buscarProdutos(Long id) {
+    public RestauranteResponseDTO buscarProdutos(Long id) {
         Restaurante restaurante = restauranteRepository.findRestauranteComProdutosDisponiveis(id)
         .orElseThrow(() -> new IllegalArgumentException("Restaurante não encontrado: " + id));
 
-        List<ProdutoDTO> produtos =  restaurante.getProdutos().stream().map(p -> new ProdutoDTO(
-                p.getId(),
-                p.getNome(), p.getDescricao(), p.getPreco(), p.getCategoria(), p.getDisponivel(), null))
-                .toList();
-
-        return new RestauranteDTO( 
-            restaurante.getId(), 
-            restaurante.getNome(), 
-            restaurante.getCategoria(), 
-            restaurante.getEndereco(), 
-            restaurante.getTelefone(), 
-            restaurante.getTaxaEntrega(),
-            restaurante.isAtivo(),
-            restaurante.getAvaliacao(),
-            produtos
-        );
+        return RestauranteResponseDTO.fromEntity(restaurante);
     } 
 
     public BigDecimal calcularTaxaDeEntrega(Long id, String cepCliente){
         Restaurante restaurante = restauranteRepository.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("Restaurante não encontrado: " + id));
 
-        BigDecimal distancia = this.distanceApiClient.calcularDistanciaKm(restaurante.getEndereco(),cepCliente);
+        BigDecimal distancia = this.distanceApiClient.calcularDistanciaKm(restaurante.getEndereco().getCep() ,cepCliente);
         
         return restaurante.calcularTaxaDeEntrega(distancia, BigDecimal.valueOf(1));
     }
