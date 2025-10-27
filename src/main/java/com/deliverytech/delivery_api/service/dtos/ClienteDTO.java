@@ -31,7 +31,7 @@ public record ClienteDTO(
         /**
          * Converte uma entidade ClienteDTO para Cliente
          */
-        public static Cliente fromEntity(ClienteDTO cliente) {
+        public static Cliente mountEntity(ClienteDTO cliente) {
             if (cliente == null) {
                 return null;
             }
@@ -53,7 +53,7 @@ public record ClienteDTO(
             }
 
             return itens.stream()
-                    .map(ClienteDTO::fromEntity)
+                    .map(ClienteDTO::mountEntity)
                     .toList();
         }
 

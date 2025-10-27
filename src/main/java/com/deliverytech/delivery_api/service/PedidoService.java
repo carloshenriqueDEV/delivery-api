@@ -13,6 +13,8 @@ import com.deliverytech.delivery_api.service.dtos.PedidoResponseDTO;
 import com.deliverytech.delivery_api.service.interfaces.PedidoServiceInterface;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 @Service 
 @Transactional 
@@ -233,5 +235,21 @@ public class PedidoService implements PedidoServiceInterface {
         Pedido pedido = new Pedido(cliente,restaurante, itens,StatusPedido.PENDENTE, pedidoDTO.observacoes(), taxaDeEntrega, pedidoDTO.getEnderecoEntreDeEntraga()); 
 
         return PedidoResponseDTO.fromEntity(pedido);
+    }
+
+    @Override
+    public List<PedidoResponseDTO> listaPedidos(StatusPedido status, LocalDateTime inicio, LocalDateTime fim) {
+        List<Pedido> pedidos = pedidoRepository.findByStatusAndDataPedidoBetweenOrderByDataPedidoDesc(status, inicio, fim);
+
+        return PedidoResponseDTO.fromEntities(pedidos);
+    }
+
+    @Override
+    public List<PedidoResponseDTO> buscarPedidosPorRestaurante(Long restauranteId, StatusPedido status) {
+        List<Pedido> pedidos = pedidoRepository.findByRestauranteId(restauranteId, status)
+        .orElseThrow(() -> new IllegalArgumentException("Pedidos não encontrados para o restaurante de ID " + restauranteId));
+
+        return PedidoResponseDTO.fromEntities(pedidos);
+
     }
 }

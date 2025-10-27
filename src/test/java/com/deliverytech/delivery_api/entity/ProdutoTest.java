@@ -10,7 +10,7 @@ class ProdutoTest {
     void deveCriarProdutoValido() {
         Restaurante restaurante = new Restaurante("Restaurante X", "Lanches", 
                 new Endereco("Rua A", "1", "Bairro", "SP", "SP", "12345-000"),
-                "11999999999", new BigDecimal("5.00"));
+                "11999999999", new BigDecimal("5.00"), "08:00-22:00");
 
         Produto produto = new Produto("X-Burger", "Hambúrguer artesanal", new BigDecimal("25.00"), 
                 "Lanche", true, restaurante);

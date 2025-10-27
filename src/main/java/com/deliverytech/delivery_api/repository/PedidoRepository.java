@@ -23,6 +23,7 @@ public interface PedidoRepository extends JpaRepository<Pedido, Long> {
     // Buscar por status 
     List<Pedido> findByStatusOrderByDataPedidoDesc(StatusPedido status); 
 
+    List<Pedido> findByStatusAndDataPedidoBetweenOrderByDataPedidoDesc( StatusPedido status, LocalDateTime inicio, LocalDateTime fim );
 
     @Query("""
         SELECT DISTINCT p FROM Pedido p
@@ -44,8 +45,8 @@ public interface PedidoRepository extends JpaRepository<Pedido, Long> {
        List<Pedido> findPedidosDodia(@Param("inicio") LocalDateTime inicio, @Param("fim") LocalDateTime fim);
 
     // Buscar pedidos por restaurante 
-    @Query("SELECT p FROM Pedido p WHERE p.restaurante.id = :restauranteId ORDER BY p.dataPedido DESC") 
-    List<Pedido> findByRestauranteId(@Param("restauranteId") Long restauranteId); 
+    @Query("SELECT p FROM Pedido p WHERE p.restaurante.id = :restauranteId AND p.status = :status ORDER BY p.dataPedido DESC") 
+    Optional<List<Pedido>> findByRestauranteId(@Param("restauranteId") Long restauranteId, @Param("status") StatusPedido status); 
  
     // Relatório - pedidos por status 
     @Query("SELECT p.status, COUNT(p) FROM Pedido p GROUP BY p.status") 

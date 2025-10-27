@@ -124,15 +124,11 @@ public class ClienteService implements ClienteServiceInterface {
      * Ativar e Desativar cliente
      */
     @Override
-    public void ativarDesativar(Long id) {
+    public void ativarDesativar(Long id, Boolean ativo) {
         Cliente cliente = clienteRepository.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("Cliente não encontrado: " + id));
 
-        if (cliente.isAtivo()) {
-            cliente.inativar();
-        } else {
-            cliente.setAtivo(true);
-        }
+        cliente.setAtivo(ativo);
 
         clienteRepository.save(cliente);
     }

@@ -24,6 +24,16 @@ public interface RestauranteRepository extends JpaRepository<Restaurante, Long> 
  
     // Buscar por categoria 
     List<Restaurante> findByCategoriaAndAtivoTrue(String categoria); 
+
+     @Query("""
+        SELECT DISTINCT r 
+        FROM Restaurante r
+        JOIN FETCH r.produtos p
+        WHERE (:categoria IS NULL OR LOWER(r.categoria) = LOWER(:categoria))
+        AND (:ativo IS NULL OR r.ativo = :ativo)
+        AND p.disponivel = true
+    """)
+    List<Restaurante> findRestaurantesComFiltrosOpcionais(@Param("categoria") String categoria, @Param("ativo") Boolean ativo);
  
     // Buscar por nome contendo (case insensi ve) 
     List<Restaurante> findByNomeContainingIgnoreCaseAndAtivoTrue(String nome); 

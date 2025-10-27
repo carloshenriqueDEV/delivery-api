@@ -17,6 +17,9 @@ import java.util.Optional;
 @RestController 
 @RequestMapping("/api/clientes") 
 @CrossOrigin(origins = "*") 
+//Todo: incluir paginação nos endpoints que trazem uma grande massa de dados
+//Todo: incluir api response wrapper para todos os endpoint
+//Todo: remover endpoints redundantes exemplos AtivarOuDesativar e atualizarStatus
 public class ClienteController { 
  
     @Autowired 
@@ -62,11 +65,11 @@ public class ClienteController {
     } 
  
     /** 
-     * Ina var cliente (so delete) 
+     * Inativar cliente (so delete) 
      */ 
     @DeleteMapping("/{id}") 
-    public ResponseEntity<?> AtivarOuDesativar(@PathVariable Long id) { 
-            clienteService.ativarDesativar(id); 
+    public ResponseEntity<?> AtivarOuDesativar(@PathVariable Long id, @RequestParam Boolean ativo) { 
+            clienteService.ativarDesativar(id, ativo); 
             return ResponseEntity.ok().body("Cliente inativado com sucesso"); 
     } 
  
@@ -94,7 +97,7 @@ public class ClienteController {
      */
     @PatchMapping("/{id}/status")
     public ResponseEntity<?> atualizarStatus(@PathVariable Long id, @RequestParam boolean ativo) {
-            clienteService.ativarDesativar(id);
+            clienteService.ativarDesativar(id, ativo);
             String status = ativo ? "ativado" : "inativado";
             return ResponseEntity.ok().body("Cliente " + status + " com sucesso");
     }

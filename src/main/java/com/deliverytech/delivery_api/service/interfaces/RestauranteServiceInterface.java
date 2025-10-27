@@ -9,10 +9,11 @@ public interface RestauranteServiceInterface {
     RestauranteResponseDTO cadastrar(RestauranteDTO restauranteDto);
     RestauranteResponseDTO buscarPorId(Long id);
     List<RestauranteResponseDTO> buscarPorCategoria(String categoria);
-    List<RestauranteResponseDTO> listarDistponiveis();
+    List<RestauranteResponseDTO> listar(String categoria, Boolean ativo);
     RestauranteResponseDTO atualizar(Long id, RestauranteDTO restauranteDto);
-    void inativar(Long id);
+    RestauranteResponseDTO ativarDesativar(Long id, Boolean ativo);
     RestauranteResponseDTO buscarProdutos(Long id);
     BigDecimal calcularTaxaDeEntrega(Long id, String cepCliente);
+    List<RestauranteResponseDTO> buscarRestaurantesProximos(String cep, Integer raio);
 
 }

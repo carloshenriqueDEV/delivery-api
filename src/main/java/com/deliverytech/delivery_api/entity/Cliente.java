@@ -83,7 +83,7 @@ public class Cliente {
     public void setEnderecos(List<Endereco> enderecos){
         this.enderecos = enderecos;
     }
-
+    
     private void validarNome(String nome) { 
         if (nome == null || nome.trim().isEmpty()) { 
             throw new IllegalArgumentException("Nome é obrigatório."); 

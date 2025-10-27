@@ -75,8 +75,7 @@ public class ProdutoService implements ProdutoServiceInterface {
             throw new IllegalArgumentException("Nenhum produto encontrado na categoria: " + categoria);
         }
 
-        return produtos.stream()
-            .map(p ->  ProdutoResponseDTO.fromEntity(p)).toList();
+        return ProdutoResponseDTO.fromEntities(produtos);
     } 
  
     /** 
@@ -146,5 +145,13 @@ public class ProdutoService implements ProdutoServiceInterface {
 
         return ProdutoResponseDTO.fromEntity(produto);
     } 
+
+    @Override
+    public List<ProdutoResponseDTO> buscarPorNome(String nome){
+        List<Produto> produtos = produtoRepository.findByNomeContainingIgnoreCaseAndDisponivelTrue(nome.toLowerCase());
+
+        return ProdutoResponseDTO.fromEntities(produtos);
+
+    }
  
 }

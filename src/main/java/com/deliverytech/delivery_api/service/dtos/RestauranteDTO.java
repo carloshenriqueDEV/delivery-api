@@ -6,27 +6,54 @@ import java.util.List;
 import com.deliverytech.delivery_api.entity.Endereco;
 import com.deliverytech.delivery_api.entity.Restaurante;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Pattern;
 
+@Schema(description = "Dados para cadastro de restaurante") 
 public record RestauranteDTO(
    Long id, 
+     @Schema(description = "Nome do restaurante", 
+            example = "Pizza Express", 
+            required = true) 
    @NotBlank(message = "Nome é obrigatório.")
    String nome, 
+
+    @Schema(description = "Categoria do restaurante", 
+            example = "Italiana", 
+            allowableValues = {"Italiana", "Brasileira", "Japonesa", "Mexicana", "Árabe"}) 
    @NotBlank(message = "Categoria é obrigatória.")
    String categoria, 
+
+     @Schema(description = "Endereço completo do restaurante", 
+            example = "Rua das Flores, 123 - Centro")
    @NotEmpty(message = "Endereço é obrigatório")   
    @Valid
    EnderecoDTO endereco, 
+
+   @Schema(description = "Telefone para contato", 
+            example = "11999999999") 
    @NotBlank(message = "Telefone é obrigatório") 
    @Pattern(regexp = "\\d{10,11}", message = "Telefone deve ter 10 ou 11 dígitos") 
    String telefone, 
-   BigDecimal taxaEntrega,
-   boolean ativo, 
-   Float avaliacao,
-   List<ProdutoDTO> produtos
+
+    @Schema(description = "Taxa de entrega em reais", 
+            example = "5.50", 
+            minimum = "0")
+    @NotEmpty(message = "Taxa de entrega é obrigatória") 
+    @DecimalMin(value = "0.0", message = "Taxa de entrega deve ser posi va") 
+    BigDecimal taxaEntrega, 
+    boolean ativo, 
+    Float avaliacao,
+    List<ProdutoDTO> produtos,
+   
+    @Schema(description = "Horário de funcionamento", 
+            example = "08:00-22:00") 
+    @NotBlank(message = "Horário de funcionamento é obrigatório") 
+    String horarioFuncionamento
 ) {
 
     /**
@@ -42,7 +69,8 @@ public record RestauranteDTO(
                restaurante.categoria, 
                EnderecoDTO.fromEntity(restaurante.endereco),
                restaurante.telefone,
-               restaurante.taxaEntrega);
+               restaurante.taxaEntrega,
+               restaurante.horarioFuncionamento);
         }
         
         /**

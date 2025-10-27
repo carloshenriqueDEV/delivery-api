@@ -168,7 +168,7 @@ class ClienteServiceTest {
         cliente.setAtivo(true);
         when(clienteRepository.findById(1L)).thenReturn(Optional.of(cliente));
 
-        clienteService.ativarDesativar(1L);
+        clienteService.ativarDesativar(1L, false);
 
         assertFalse(cliente.isAtivo());
         verify(clienteRepository).save(cliente);
@@ -180,7 +180,7 @@ class ClienteServiceTest {
         cliente.setAtivo(false);
         when(clienteRepository.findById(1L)).thenReturn(Optional.of(cliente));
 
-        clienteService.ativarDesativar(1L);
+        clienteService.ativarDesativar(1L, true);
 
         assertTrue(cliente.isAtivo());
         verify(clienteRepository).save(cliente);
@@ -192,7 +192,7 @@ class ClienteServiceTest {
         when(clienteRepository.findById(1L)).thenReturn(Optional.empty());
 
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
-                () -> clienteService.ativarDesativar(1L));
+                () -> clienteService.ativarDesativar(1L, false));
 
         assertEquals("Cliente não encontrado: 1", ex.getMessage());
     }

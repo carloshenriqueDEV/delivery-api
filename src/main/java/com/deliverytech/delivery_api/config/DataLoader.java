@@ -75,6 +75,7 @@ public class DataLoader implements CommandLineRunner{
         restaurante1.setTelefone("1133333333");
         restaurante1.setTaxaEntrega(new BigDecimal("5.00"));
         restaurante1.setAtivo(true);
+        restaurante1.setHorarioFuncionamento("08:00-22:00");
 
         Restaurante restaurante2 = new Restaurante();
         restaurante2.setNome("Pizzaria Bella Italia");
@@ -83,6 +84,7 @@ public class DataLoader implements CommandLineRunner{
         restaurante2.setTelefone("2122222222");
         restaurante2.setTaxaEntrega(new BigDecimal("7.50"));
         restaurante2.setAtivo(true);
+        restaurante2.setHorarioFuncionamento("08:00-22:00");
 
         restauranteRepository.saveAll(Arrays.asList(restaurante1, restaurante2));
         System.out.println("2 restaurantes inseridos.");

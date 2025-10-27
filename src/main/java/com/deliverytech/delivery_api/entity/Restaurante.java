@@ -17,14 +17,15 @@ public class Restaurante {
     private String telefone; 
     private BigDecimal taxaEntrega; 
     private boolean ativo; 
-    private Float avaliacao;
+    private Float avaliacao; 
+     private String horarioFuncionamento; 
 
     public Restaurante() {
         // pode ficar vazio, o JPA só precisa dele para criar a instância
     }
 
     // 🔹 Construtor de uso da aplicação (Service, Controller etc.)
-    public Restaurante(String nome, String categoria, Endereco endereco, String telefone, BigDecimal taxaEntrega) {
+    public Restaurante(String nome, String categoria, Endereco endereco, String telefone, BigDecimal taxaEntrega, String horarioFuncionaento) {
         this.validarDadosRestaurante(nome, taxaEntrega);
 
         this.nome = nome;
@@ -34,6 +35,7 @@ public class Restaurante {
         this.taxaEntrega = taxaEntrega;
         this.ativo = true;
         this.avaliacao = 0.0f; 
+        this.horarioFuncionamento = horarioFuncionaento;
     }
  
     @OneToMany(mappedBy = "restaurante") 
@@ -46,27 +48,12 @@ public class Restaurante {
     @JoinColumn(name = "endereco_id", referencedColumnName = "id")
     private Endereco endereco;
 
-    public void ativar() { 
-        this.ativo = true; 
-    }
-    public void inativar() { 
-        this.ativo = false; 
-    }
-
-    public boolean getAtivo() {
-        return ativo;
-    }
-
     public BigDecimal getTaxaEntrega() {
         return taxaEntrega;
     }
 
     public Long getId() {
         return id;
-    }
-
-    public boolean isAtivo() {
-        return ativo;
     }
 
      /** 

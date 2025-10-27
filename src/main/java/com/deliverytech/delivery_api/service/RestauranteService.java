@@ -38,7 +38,8 @@ public class RestauranteService implements RestauranteServiceInterface {
             restauranteDTO.categoria(),
             restauranteDTO.getEndereco(),
             restauranteDTO.telefone(),
-            restauranteDTO.taxaEntrega()
+            restauranteDTO.taxaEntrega(),
+            restauranteDTO.horarioFuncionamento()
         );
 
         restauranteRepository.save(restaurante); 
@@ -59,12 +60,12 @@ public class RestauranteService implements RestauranteServiceInterface {
     } 
  
     /** 
-     * Listar restaurantes a vos 
+     * Listar restaurantes 
      */ 
     @Transactional(readOnly = true) 
     @Override
-    public List<RestauranteResponseDTO> listarDistponiveis() { 
-        return restauranteRepository.findByAtivoTrue()
+    public List<RestauranteResponseDTO> listar(String categoria, Boolean ativo) { 
+        return restauranteRepository.findRestaurantesComFiltrosOpcionais(categoria, ativo)
             .stream() 
             .map(r -> RestauranteResponseDTO.fromEntity(r)) 
             .toList(); 
@@ -102,7 +103,8 @@ public class RestauranteService implements RestauranteServiceInterface {
             restauranteAtualizado.categoria(),
             restauranteAtualizado.getEndereco(),
             restauranteAtualizado.telefone(),
-            restauranteAtualizado.taxaEntrega()
+            restauranteAtualizado.taxaEntrega(),
+            restauranteAtualizado.horarioFuncionamento()
         );
 
         novaVersaoRestaurante.setId(id);
@@ -116,12 +118,14 @@ public class RestauranteService implements RestauranteServiceInterface {
      * Inativar restaurante 
      */ 
     @Override
-    public void inativar(Long id) { 
+    public RestauranteResponseDTO ativarDesativar(Long id, Boolean ativo) { 
         Restaurante restaurante = restauranteRepository.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("Restaurante não encontrado: " + id)); 
  
-        restaurante.setAtivo(false); 
+        restaurante.setAtivo(ativo); 
         restauranteRepository.save(restaurante); 
+
+        return  RestauranteResponseDTO.fromEntity(restaurante);
     }
 
     @Override
@@ -141,4 +145,8 @@ public class RestauranteService implements RestauranteServiceInterface {
         return restaurante.calcularTaxaDeEntrega(distancia, BigDecimal.valueOf(1));
     }
   
+    public List<RestauranteResponseDTO> buscarRestaurantesProximos(String cep, Integer raio){
+        // todo implementar buscar de restaurantes próximos dentro do raio
+        return null;
+    }
 } 

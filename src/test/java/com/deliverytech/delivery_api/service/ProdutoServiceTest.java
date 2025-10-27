@@ -17,6 +17,8 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
 class ProdutoServiceTest {
@@ -48,7 +50,8 @@ class ProdutoServiceTest {
         produto = new Produto("Produto Teste", "Descrição", BigDecimal.valueOf(10.0), "Categoria", true, restaurante);
         produto.setId(1L);
 
-        RestauranteDTO restauranteDTO = new RestauranteDTO(1L, "Restaurante Teste", "", null, null, null, false, null, null);
+        RestauranteDTO restauranteDTO = new RestauranteDTO(1L, "Restaurante Teste", "", null, null, null, false, null, null,                
+                "08:00-22:00");
 
         produtoDTO = new ProdutoDTO(
                 produto.getId(),
@@ -94,7 +97,8 @@ class ProdutoServiceTest {
         when(produtoRepository.findById(produto.getId())).thenReturn(Optional.of(produto));
         when(produtoRepository.save(any(Produto.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        RestauranteDTO restauranteDTO = new RestauranteDTO(1L, "Restaurante Teste", "", null, null, null, false, null, null);
+        RestauranteDTO restauranteDTO = new RestauranteDTO(1L, "Restaurante Teste", "", null, null, null, false, null, null,                
+                "08:00-22:00");
 
         ProdutoDTO dtoAtualizado = new ProdutoDTO(
                 produto.getId(),

@@ -10,7 +10,7 @@ public interface ClienteServiceInterface {
     Optional<ClienteResponseDTO> buscarPorId(Long id);
     Optional<ClienteResponseDTO> buscarPorEmail(String email);
     ClienteResponseDTO atualizar(Long id, ClienteDTO clienteAtualizado);
-    void ativarDesativar(Long id);
+    void ativarDesativar(Long id, Boolean ativo);
     Iterable<ClienteResponseDTO> listarAtivos();
     List<ClienteResponseDTO> buscarPorNome(String nome);
 

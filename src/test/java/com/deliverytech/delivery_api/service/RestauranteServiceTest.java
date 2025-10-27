@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 class RestauranteServiceTest {
@@ -49,7 +50,8 @@ class RestauranteServiceTest {
                 "Brasileira",
                 endereco,
                 "11999999999",
-                BigDecimal.valueOf(10.0)
+                BigDecimal.valueOf(10.0),
+                "08:00-22:00"
         );
         restaurante.setId(1L);
        
@@ -67,7 +69,9 @@ class RestauranteServiceTest {
                 BigDecimal.valueOf(5.0),
                 true,
                 Float.valueOf("7.75"),
-                new ArrayList<ProdutoDTO>()
+                new ArrayList<ProdutoDTO>(),
+                "08:00-22:00"
+                
         );
 
         when(restauranteRepository.findByNome(dto.nome())).thenReturn(Optional.empty());
@@ -89,10 +93,11 @@ class RestauranteServiceTest {
                 "Brasileira",
                 enderecoDTO,
                 "11999999999",
-                BigDecimal.valueOf(10.0),
+                BigDecimal.valueOf(10.0), 
                 true,
                 Float.valueOf("7.75"),
-                new ArrayList<ProdutoDTO>()
+                new ArrayList<ProdutoDTO>(),                               
+                "08:00-22:00"
         );
 
         when(restauranteRepository.findByNome(dto.nome())).thenReturn(Optional.of(restaurante));
@@ -124,7 +129,7 @@ class RestauranteServiceTest {
     void deveListarRestaurantesDisponiveis() {
         when(restauranteRepository.findByAtivoTrue()).thenReturn(List.of(restaurante));
 
-        List<RestauranteResponseDTO> lista = restauranteService.listarDistponiveis();
+        List<RestauranteResponseDTO> lista = restauranteService.listar(null, null);
 
         assertEquals(1, lista.size());
         verify(restauranteRepository).findByAtivoTrue();
@@ -154,7 +159,8 @@ class RestauranteServiceTest {
                 BigDecimal.valueOf(15.0),
                 true,
                 Float.valueOf("7.75"),
-                new ArrayList<ProdutoDTO>()
+                new ArrayList<ProdutoDTO>(),                               
+                "08:00-22:00"
         );
 
         when(restauranteRepository.findById(dtoAtualizado.id())).thenReturn(Optional.of(restaurante));
@@ -180,7 +186,8 @@ class RestauranteServiceTest {
                 BigDecimal.valueOf(15.0),
                 true,
                 Float.valueOf("7.75"),
-                new ArrayList<ProdutoDTO>()
+                new ArrayList<ProdutoDTO>(),
+                "08:00-22:00"
         );
 
         when(restauranteRepository.findById(dto.id())).thenReturn(Optional.of(restaurante));
@@ -194,7 +201,7 @@ class RestauranteServiceTest {
     void deveInativarRestaurante() {
         when(restauranteRepository.findById(1L)).thenReturn(Optional.of(restaurante));
 
-        restauranteService.inativar(1L);
+        restauranteService.ativarDesativar(1L, false);
 
         assertFalse(restaurante.isAtivo());
         verify(restauranteRepository).save(restaurante);
@@ -205,7 +212,7 @@ class RestauranteServiceTest {
     void deveLancarExcecaoAoInativarRestauranteInexistente() {
         when(restauranteRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThrows(IllegalArgumentException.class, () -> restauranteService.inativar(99L));
+        assertThrows(IllegalArgumentException.class, () -> restauranteService.ativarDesativar(99L, false));
     }
 
     @Test

@@ -4,27 +4,42 @@ import java.math.BigDecimal;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.deliverytech.delivery_api.service.dtos.RestauranteDTO;
 import com.deliverytech.delivery_api.service.dtos.RestauranteResponseDTO;
 import com.deliverytech.delivery_api.service.interfaces.RestauranteServiceInterface;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+
 import org.springframework.web.bind.annotation.PutMapping;
 
 
 
 
+//Todo: incluir paginação nos endpoints que trazem uma grande massa de dados
+//Todo: incluir api response wrapper para todos os endpoint
+//Todo: Excluir endpoint's redundantes
 
 @RestController
 @RequestMapping("/api/restaurantes")
 @CrossOrigin("*")
+@Tag(name = "Restaurantes", description="API de Gereciamento de Restaurantes")
 public class RestauranteController {
     private final RestauranteServiceInterface  restauranteService;
 
@@ -33,7 +48,19 @@ public class RestauranteController {
     }
 
     @PostMapping()
-    public ResponseEntity<RestauranteResponseDTO> cadastraRestaurante(@RequestBody RestauranteDTO restauranteDTO) {
+    @Operation(summary = "Cadastrar restaurante", description = "Cria um novo restaurante no sistema")
+    @ApiResponses({
+        @ApiResponse(responseCode = "201", description = "Restaurante criado com sucesso"),
+        @ApiResponse(responseCode = "400", description = "Dados inválidos"),
+        @ApiResponse(responseCode = "500", description = "Erro interno"),
+    })
+    public ResponseEntity<RestauranteResponseDTO> cadastrar(
+        @RequestBody 
+        @Valid 
+        @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            description = "Dados do restaurante a ser criado"
+        )
+    RestauranteDTO restauranteDTO) {
        
        RestauranteResponseDTO restaurante = restauranteService.cadastrar(restauranteDTO);
 
@@ -41,7 +68,17 @@ public class RestauranteController {
     }
     
     @GetMapping("/{id}")
-    public ResponseEntity<RestauranteResponseDTO> buscarPorId(@PathVariable Long id) {
+    @Operation(
+        summary = "Buscar restaurante por ID", 
+        description = "Recupera um restaurante específico pelo ID"
+    ) 
+    @ApiResponses({ 
+        @ApiResponse(responseCode = "200", description = "Restaurante encontrado"), 
+        @ApiResponse(responseCode = "404", description = "Restaurante não encontrado") 
+    })
+    public ResponseEntity<RestauranteResponseDTO> buscarPorId(
+       @Parameter(description = "ID do restaurante")  
+       @PathVariable Long id) {
        RestauranteResponseDTO restaurante = restauranteService.buscarPorId(id);
        return ResponseEntity.status(HttpStatus.CREATED).body(restaurante);
     }
@@ -54,8 +91,18 @@ public class RestauranteController {
     }
 
     @GetMapping()
-    public ResponseEntity<List<RestauranteResponseDTO>> buscarRestaurantes() {
-        List<RestauranteResponseDTO> restauranteDTOs = restauranteService.listarDistponiveis();
+    @Operation(summary = "Listar restaurantes", 
+        description = "Lista restaurantes com filtros opcionais e paginação") 
+    @ApiResponses({ 
+        @ApiResponse(responseCode = "200", description = "Lista recuperada com sucesso") 
+    })
+    public ResponseEntity<List<RestauranteResponseDTO>> buscarRestaurantes(
+        @Parameter(description = "Categoria do restaurante") 
+        @RequestParam(required = false) String categoria, 
+        @Parameter(description = "Status a vo do restaurante") 
+        @RequestParam(required = false) Boolean ativo 
+            )  {
+        List<RestauranteResponseDTO> restauranteDTOs = restauranteService.listar(categoria, ativo);
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(restauranteDTOs);
     }
     
@@ -66,17 +113,69 @@ public class RestauranteController {
     }
     
     @PutMapping("")
-    public ResponseEntity<RestauranteResponseDTO> atualizarRestaurante(@PathVariable Long id, @RequestBody RestauranteDTO restauranteDTO) {
+    @Operation(summary = "Atualizar restaurante", 
+        description = "Atualiza os dados de um restaurante existente"
+    ) 
+    @ApiResponses({ 
+        @ApiResponse(responseCode = "200", description = "Restaurante atualizado com sucesso"), 
+        @ApiResponse(responseCode = "404", description = "Restaurante não encontrado"), 
+        @ApiResponse(responseCode = "400", description = "Dados inválidos") 
+    })
+    public ResponseEntity<RestauranteResponseDTO> atualizarRestaurante(
+        @Parameter(description = "ID do restaurante") @PathVariable Long id, 
+        @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            description = "Dados do restaurante a ser criado"
+        )
+        @RequestBody RestauranteDTO restauranteDTO) {
         RestauranteResponseDTO restaurante = restauranteService.atualizar(id, restauranteDTO);
         
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(restaurante);
+    }
+
+    @PatchMapping("/{id}")
+    @Operation(summary = "Ativar/Desativar restaurante", 
+        description = "Alternar o status ativo/inativo do restaurante."
+    ) 
+    @ApiResponses({ 
+        @ApiResponse(responseCode = "200", description = "Restaurante atualizado com sucesso"), 
+        @ApiResponse(responseCode = "404", description = "Restaurante não encontrado"), 
+    })
+    public ResponseEntity<RestauranteResponseDTO> ativarOuInativarRestaurante(@PathVariable Long id, @RequestBody Boolean ativo){
+        RestauranteResponseDTO restaurante = restauranteService.ativarDesativar(id, ativo);
+
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(restaurante);
     }
     
      
     @GetMapping("/{id}/taxa-entrega/{cep}")
+       @Operation(summary = "Calcular taxa de entrega", 
+               description = "Calcula a taxa de entrega para um CEP específico") 
+    @ApiResponses({ 
+        @ApiResponse(responseCode = "200", description = "Taxa calculada com sucesso"), 
+        @ApiResponse(responseCode = "404", description = "Restaurante não encontrado") 
+    })
     public ResponseEntity<BigDecimal> calcularTaxaEntrega(@PathVariable Long id, @PathVariable String cep) {
         BigDecimal taxaDeEntrega = restauranteService.calcularTaxaDeEntrega(id, cep);
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(taxaDeEntrega);
+    }
+
+    @GetMapping("/proximos/{cep}") 
+    @Operation(summary = "Restaurantes próximos", 
+               description = "Lista restaurantes próximos a um CEP") 
+    @ApiResponses({ 
+        @ApiResponse(responseCode = "200", description = "Restaurantes próximos encontrados"), 
+        @ApiResponse(responseCode = "404", description = "Restaurante não encontrado") 
+    }) 
+    public ResponseEntity<List<RestauranteResponseDTO>> buscarProximos( 
+            @Parameter(description = "CEP de referência") 
+            @PathVariable String cep, 
+            @Parameter(description = "Raio em km") 
+            @RequestParam(defaultValue = "10") Integer raio) { 
+ 
+        List<RestauranteResponseDTO> restaurantes = 
+            restauranteService.buscarRestaurantesProximos(cep, raio); 
+ 
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(restaurantes); 
     }
     
 }

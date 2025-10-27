@@ -12,7 +12,7 @@ class PedidoTest {
     private Restaurante criarRestauranteAtivo() {
         return new Restaurante("Sabor", "Comida", 
                 new Endereco("Rua A", "1", "Centro", "SP", "SP", "12345-000"), 
-                "119", new BigDecimal("10"));
+                "119", new BigDecimal("10"),"08:00-22:00");
     }
 
     private Cliente criarClienteAtivo() {
@@ -59,7 +59,7 @@ class PedidoTest {
     @Test
     void deveLancarErroQuandoRestauranteInativo() {
         Restaurante restaurante = criarRestauranteAtivo();
-        restaurante.inativar();
+        restaurante.setAtivo(false);
 
         assertThatThrownBy(() -> new Pedido(criarClienteAtivo(), restaurante, List.of(criarItem()), 
                 StatusPedido.PENDENTE, null, new BigDecimal("5.0"), 

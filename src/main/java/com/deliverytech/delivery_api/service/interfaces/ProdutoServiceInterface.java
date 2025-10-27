@@ -13,6 +13,7 @@ public interface ProdutoServiceInterface {
     ProdutoResponseDTO buscarPorId(Long id);   
     List<ProdutoResponseDTO> buscarProdutosPorRestaurante(Long restauranteId);
     List<ProdutoResponseDTO> buscarPorCategoria(String categoria);
+    List<ProdutoResponseDTO> buscarPorNome(String nome);
     ProdutoResponseDTO alterarDisponibilidade(Long produtoId, boolean disponivel);
     List<ProdutoResponseDTO> buscarPorFaixaPreco(BigDecimal precoMin, BigDecimal precoMax);
 }
