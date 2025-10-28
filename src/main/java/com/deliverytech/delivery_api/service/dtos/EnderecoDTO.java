@@ -1,6 +1,7 @@
 package com.deliverytech.delivery_api.service.dtos;
 
 import com.deliverytech.delivery_api.entity.Endereco;
+import com.deliverytech.delivery_api.validation.ValidCEP;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -16,6 +17,7 @@ public record EnderecoDTO(
     String cidade,
     String estado,
     @NotBlank(message = "CEP é obrigatório")
+    @ValidCEP
     String cep
 ) {
       /**

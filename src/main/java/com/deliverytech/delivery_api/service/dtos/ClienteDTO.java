@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.deliverytech.delivery_api.entity.Cliente;
 import com.deliverytech.delivery_api.entity.Endereco;
+import com.deliverytech.delivery_api.validation.ValidTelefone;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
@@ -21,7 +22,7 @@ public record ClienteDTO(
     @Email(message = "Email deve ter o formatodo válido.")
     String email,
     @NotBlank(message = "Telefone é obrigatório") 
-    @Pattern(regexp = "\\d{10,11}", message = "Telefone deve ter 10 ou 11 dígitos") 
+    @ValidTelefone 
     String telefone,
     boolean ativo, 
     @NotEmpty(message = "Endereço é obrigatório")   

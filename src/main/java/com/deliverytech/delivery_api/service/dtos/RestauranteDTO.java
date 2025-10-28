@@ -5,13 +5,15 @@ import java.util.List;
 
 import com.deliverytech.delivery_api.entity.Endereco;
 import com.deliverytech.delivery_api.entity.Restaurante;
+import com.deliverytech.delivery_api.validation.ValidCategoria;
+import com.deliverytech.delivery_api.validation.ValidTelefone;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 
 @Schema(description = "Dados para cadastro de restaurante") 
 public record RestauranteDTO(
@@ -20,12 +22,14 @@ public record RestauranteDTO(
             example = "Pizza Express", 
             required = true) 
    @NotBlank(message = "Nome é obrigatório.")
+   @Size(min = 2, max = 100, message = "Nome deve ter entre 2 e 100 caracteres") 
    String nome, 
 
     @Schema(description = "Categoria do restaurante", 
             example = "Italiana", 
             allowableValues = {"Italiana", "Brasileira", "Japonesa", "Mexicana", "Árabe"}) 
    @NotBlank(message = "Categoria é obrigatória.")
+   @ValidCategoria 
    String categoria, 
 
      @Schema(description = "Endereço completo do restaurante", 
@@ -37,14 +41,14 @@ public record RestauranteDTO(
    @Schema(description = "Telefone para contato", 
             example = "11999999999") 
    @NotBlank(message = "Telefone é obrigatório") 
-   @Pattern(regexp = "\\d{10,11}", message = "Telefone deve ter 10 ou 11 dígitos") 
+   @ValidTelefone  
    String telefone, 
 
     @Schema(description = "Taxa de entrega em reais", 
             example = "5.50", 
             minimum = "0")
     @NotEmpty(message = "Taxa de entrega é obrigatória") 
-    @DecimalMin(value = "0.0", message = "Taxa de entrega deve ser posi va") 
+    @DecimalMin(value = "0.0", message = "Taxa de entrega deve ser positiva") 
     BigDecimal taxaEntrega, 
     boolean ativo, 
     Float avaliacao,

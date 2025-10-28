@@ -75,7 +75,8 @@ void deveCriarPedidoComSucesso() {
         2,
         BigDecimal.valueOf(3.5),
         BigDecimal.valueOf(7.0),
-        produto.getId()
+        produto.getId(),
+        ""
     );
 
     EnderecoDTO enderecoDTO = new EnderecoDTO(1L,
@@ -97,7 +98,8 @@ void deveCriarPedidoComSucesso() {
         enderecoDTO,                
         cliente.getId(),           
         restaurante.getId(),        
-        List.of(itemDTO)            
+        List.of(itemDTO),
+        "CARTAO_CREDITO"            
     );
 
     when(clienteRepository.findByIdAndAtivoTrue(cliente.getId()))
@@ -156,9 +158,11 @@ void deveLancarExcecaoQuandoClienteNaoExiste() {
                 1,
                 BigDecimal.valueOf(10),
                 BigDecimal.valueOf(10),
-                1L
+                1L,
+                ""
             )
-        )
+        ),
+        "CARTAO_CREDITO"
     );
 
     when(clienteRepository.findByIdAndAtivoTrue(anyLong()))
@@ -196,7 +200,8 @@ void deveLancarExcecaoQuandoClienteNaoExiste() {
             1,                          // quantidade
             BigDecimal.valueOf(10),     // precoUnitario (dto pode ter esse campo)
             BigDecimal.valueOf(10),     // subtotal (não usado para busca)
-            produto.getId()             // produtoId -> **MUST MATCH** produto.getId()
+            produto.getId(),             // produtoId -> **MUST MATCH** produto.getId()
+            ""
         );
 
         PedidoDTO pedidoDTO = new PedidoDTO(
@@ -209,7 +214,8 @@ void deveLancarExcecaoQuandoClienteNaoExiste() {
             enderecoDTO,                // enderecoDeEntrega
             cliente.getId(),            // clienteId -> garantir cliente existente
             restaurante.getId(),        // restauranteId -> garantir restaurante existente
-            List.of(itemDto)            // itens -> não vazio
+            List.of(itemDto),            // itens -> não vazio
+            "CARTAO_CREDITO"
         );
 
         // mocks necessários para o fluxo chegar na verificação de disponibilidade

@@ -22,16 +22,16 @@ public class SwaggerConfig {
                         .contact(new Contact() 
                                 .name("Equipe DeliveryTech") 
                                 .email("dev@deliverytech.com") 
-                                .url("h ps://deliverytech.com")) 
+                                .url("https://deliverytech.com")) 
                         .license(new License() 
                                 .name("MIT License") 
-                                .url("h ps://opensource.org/licenses/MIT"))) 
+                                .url("https://opensource.org/licenses/MIT"))) 
                 .servers(List.of( 
                         new Server() 
-                                .url("h p://localhost:8080") 
+                                .url("http://localhost:8080") 
                                 .description("Servidor de Desenvolvimento"), 
                         new Server() 
-                                .url("h ps://api.deliverytech.com") 
+                                .url("https://api.deliverytech.com") 
                                 .description("Servidor de Produção") 
                 )); 
     } 
