@@ -1,6 +1,8 @@
 package com.deliverytech.delivery_api.service;
 
 import com.deliverytech.delivery_api.entity.Cliente;
+import com.deliverytech.delivery_api.exception.ConflictException;
+import com.deliverytech.delivery_api.exception.EntityNotFoundException;
 import com.deliverytech.delivery_api.repository.ClienteRepository;
 import com.deliverytech.delivery_api.service.dtos.ClienteDTO;
 import com.deliverytech.delivery_api.service.dtos.ClienteResponseDTO;
@@ -30,7 +32,7 @@ public class ClienteService implements ClienteServiceInterface {
 
         //valição contra o banco
         if (clienteRepository.existsByEmail(clienteDto.email())) { 
-            throw new IllegalArgumentException("Email já cadastrado"); 
+            throw new ConflictException("Email já cadastrado"); 
         } 
         
         Cliente cliente = new Cliente(clienteDto.nome(), clienteDto.email(), clienteDto.telefone(), clienteDto.getEndereco());
@@ -50,7 +52,7 @@ public class ClienteService implements ClienteServiceInterface {
 
         var cliente = clienteRepository.findById(id);
         if (cliente.isEmpty()) {
-            throw new IllegalArgumentException("Cliente não encontrado: " + id);
+            throw new EntityNotFoundException("Cliente não encontrado: " + id);
         }
 
         return cliente
@@ -66,7 +68,7 @@ public class ClienteService implements ClienteServiceInterface {
         var cliente = clienteRepository.findByEmail(email);
 
         if (cliente.isEmpty()) {
-            throw new IllegalArgumentException("Cliente não encontrado.");
+            throw new EntityNotFoundException("Cliente não encontrado.");
         }
         return cliente
                 .map(c -> ClienteResponseDTO.fromEntity(c)); 
@@ -91,12 +93,12 @@ public class ClienteService implements ClienteServiceInterface {
     @Override
     public ClienteResponseDTO atualizar(Long id, ClienteDTO clienteAtualizado) { 
         Cliente cliente = clienteRepository.findById(id) 
-            .orElseThrow(() -> new IllegalArgumentException("Cliente não encontrado: ")); 
+            .orElseThrow(() -> new EntityNotFoundException("Cliente não encontrado: ")); 
  
         // Verificar se email não está sendo usado por outro cliente 
         if (!cliente.getEmail().equals(clienteAtualizado.email()) && 
             clienteRepository.existsByEmail(clienteAtualizado.email())) { 
-            throw new IllegalArgumentException("Email já cadastrado: " + 
+            throw new ConflictException("Email já cadastrado: " + 
             clienteAtualizado.email()); 
         } 
  
@@ -126,7 +128,7 @@ public class ClienteService implements ClienteServiceInterface {
     @Override
     public void ativarDesativar(Long id, Boolean ativo) {
         Cliente cliente = clienteRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("Cliente não encontrado: " + id));
+            .orElseThrow(() -> new EntityNotFoundException("Cliente não encontrado: " + id));
 
         cliente.setAtivo(ativo);
 

@@ -2,6 +2,8 @@ package com.deliverytech.delivery_api.service;
 
 import com.deliverytech.delivery_api.entity.*;
 import com.deliverytech.delivery_api.enums.StatusPedido;
+import com.deliverytech.delivery_api.exception.BusinessException;
+import com.deliverytech.delivery_api.exception.EntityNotFoundException;
 import com.deliverytech.delivery_api.repository.*; 
 import org.springframework.beans.factory.annotation.Autowired; 
 import org.springframework.stereotype.Service; 
@@ -42,13 +44,13 @@ public class PedidoService implements PedidoServiceInterface {
     @Override
     public PedidoResponseDTO criarPedido( PedidoDTO pedidoDTO) { 
         Cliente cliente = clienteRepository.findByIdAndAtivoTrue(pedidoDTO.clienteId()) 
-            .orElseThrow(() -> new IllegalArgumentException("Cliente não encontrado: " + pedidoDTO.clienteId())); 
+            .orElseThrow(() -> new EntityNotFoundException("Cliente não encontrado: " + pedidoDTO.clienteId())); 
  
         Restaurante restaurante = restauranteRepository.findByIdAndAtivoTrue(pedidoDTO.restauranteId()) 
-            .orElseThrow(() -> new IllegalArgumentException("Restaurante não encontrado: " + pedidoDTO.restauranteId()));   
+            .orElseThrow(() -> new EntityNotFoundException("Restaurante não encontrado: " + pedidoDTO.restauranteId()));   
 
         if(pedidoDTO.itens().isEmpty() || pedidoDTO.itens() == null ){
-            throw new IllegalArgumentException("Itens do pedido não informados.");
+            throw new BusinessException("Itens do pedido não informados.");
         }
             
         List<Produto> produtos = produtoRepository.findAllById(
@@ -58,7 +60,7 @@ public class PedidoService implements PedidoServiceInterface {
         );
 
         if (produtos.isEmpty()) {
-            throw new IllegalArgumentException("Nenhum produto encontrado para os itens informados.");
+            throw new EntityNotFoundException("Nenhum produto encontrado para os itens informados.");
         }
 
         // Verifica se há algum produto inativo
@@ -66,7 +68,7 @@ public class PedidoService implements PedidoServiceInterface {
             .anyMatch(produto -> !produto.getDisponivel());
 
         if (algumInativo) {
-            throw new IllegalStateException("O pedido contém produtos inativos.");
+            throw new BusinessException("O pedido contém produtos inativos.");
         }
 
         List<ItemPedido> itens = pedidoDTO.itens().stream()
@@ -74,7 +76,7 @@ public class PedidoService implements PedidoServiceInterface {
                 Produto produto = produtos.stream()
                     .filter(p -> p.getId().equals(itemDTO.produtoId()))
                     .findFirst()
-                    .orElseThrow(() -> new IllegalArgumentException(
+                    .orElseThrow(() -> new EntityNotFoundException(
                         "Produto com ID " + itemDTO.produtoId() + " não encontrado."
                     ));
 
@@ -104,22 +106,22 @@ public class PedidoService implements PedidoServiceInterface {
      */ 
     public PedidoResponseDTO adicionarItem(Long pedidoId, Long produtoId, Integer quantidade) { 
         Pedido pedido = pedidoRepository.findById(pedidoId)
-            .orElseThrow(() -> new IllegalArgumentException("Pedido não encontrado: " + pedidoId)); 
+            .orElseThrow(() -> new EntityNotFoundException("Pedido não encontrado: " + pedidoId)); 
  
         Produto produto = produtoRepository.findById(produtoId) 
-            .orElseThrow(() -> new IllegalArgumentException("Produto não encontrado: " + produtoId)); 
+            .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado: " + produtoId)); 
  
         if (!produto.getDisponivel()) { 
-            throw new IllegalArgumentException("Produto não disponível: " + produto.getNome()); 
+            throw new BusinessException("Produto não disponível: " + produto.getNome()); 
         } 
  
         if (quantidade <= 0) { 
-            throw new IllegalArgumentException("Quantidade deve ser maior que zero"); 
+            throw new BusinessException("Quantidade deve ser maior que zero"); 
         } 
  
         // Verificar se produto pertence ao mesmo restaurante do pedido 
         if (!produto.getRestaurante().getId().equals(pedido.getRestaurante().getId())) { 
-            throw new IllegalArgumentException("Produto não pertence ao restaurante do pedido"); 
+            throw new BusinessException("Produto não pertence ao restaurante do pedido"); 
         } 
  
         ItemPedido item = new ItemPedido(); 
@@ -141,7 +143,7 @@ public class PedidoService implements PedidoServiceInterface {
     @Override
     public PedidoResponseDTO buscarPorId(Long id) { 
         Pedido pedido = pedidoRepository.buscarPedidoCompleto(id)
-            .orElseThrow(() -> new IllegalArgumentException("Pedido não encontrado: " + id));        
+            .orElseThrow(() -> new EntityNotFoundException("Pedido não encontrado: " + id));        
 
         return PedidoResponseDTO.fromEntity(pedido);
     } 
@@ -153,7 +155,7 @@ public class PedidoService implements PedidoServiceInterface {
     @Override
     public List<PedidoResponseDTO> buscarPorCliente(Long clienteId) { 
         var cliente = clienteRepository.findById(clienteId)
-            .orElseThrow(() -> new IllegalArgumentException("Cliente não encontrado: " + clienteId));
+            .orElseThrow(() -> new EntityNotFoundException("Cliente não encontrado: " + clienteId));
             
         return pedidoRepository.findByClienteOrderByDataPedidoDesc(cliente)
             .stream()
@@ -168,7 +170,7 @@ public class PedidoService implements PedidoServiceInterface {
     @Override
     public PedidoResponseDTO buscarPorNumero(String numeroPedido) { 
         Pedido pedido = pedidoRepository.findByNumeroPedido(numeroPedido)
-            .orElseThrow(() -> new IllegalArgumentException("Pedido não encontrado: " + numeroPedido));
+            .orElseThrow(() -> new EntityNotFoundException("Pedido não encontrado: " + numeroPedido));
 
         return PedidoResponseDTO.fromEntity(pedido);
         
@@ -178,7 +180,7 @@ public class PedidoService implements PedidoServiceInterface {
     @Override
     public PedidoResponseDTO atualizarStatus(Long pedidoId, StatusPedido status, String motivo) {
          Pedido pedido = pedidoRepository.buscarPedidoCompleto(pedidoId)
-            .orElseThrow(() -> new IllegalArgumentException("Pedido não encontrado: " + pedidoId)); 
+            .orElseThrow(() -> new EntityNotFoundException("Pedido não encontrado: " + pedidoId)); 
         
         pedido.setStatus(status, motivo);
         pedidoRepository.save(pedido);
@@ -188,10 +190,10 @@ public class PedidoService implements PedidoServiceInterface {
 
     public  PedidoResponseDTO calcularTotalPedido(PedidoDTO pedidoDTO){
         Cliente cliente = clienteRepository.findByIdAndAtivoTrue(pedidoDTO.clienteId()) 
-            .orElseThrow(() -> new IllegalArgumentException("Cliente não encontrado: " + pedidoDTO.clienteId())); 
+            .orElseThrow(() -> new EntityNotFoundException("Cliente não encontrado: " + pedidoDTO.clienteId())); 
  
         Restaurante restaurante = restauranteRepository.findByIdAndAtivoTrue(pedidoDTO.restauranteId()) 
-            .orElseThrow(() -> new IllegalArgumentException("Restaurante não encontrado: " + pedidoDTO.restauranteId()));   
+            .orElseThrow(() -> new EntityNotFoundException("Restaurante não encontrado: " + pedidoDTO.restauranteId()));   
             
         List<Produto> produtos = produtoRepository.findAllById(
             pedidoDTO.itens().stream()
@@ -200,7 +202,7 @@ public class PedidoService implements PedidoServiceInterface {
         );
 
         if (produtos.isEmpty()) {
-            throw new IllegalArgumentException("Nenhum produto encontrado para os itens informados.");
+            throw new EntityNotFoundException("Nenhum produto encontrado para os itens informados.");
         }
 
         // Verifica se há algum produto inativo
@@ -208,7 +210,7 @@ public class PedidoService implements PedidoServiceInterface {
             .anyMatch(produto -> !produto.getDisponivel());
 
         if (algumInativo) {
-            throw new IllegalStateException("O pedido contém produtos inativos.");
+            throw new BusinessException("O pedido contém produtos inativos.");
         }
 
         List<ItemPedido> itens = pedidoDTO.itens().stream()
@@ -216,7 +218,7 @@ public class PedidoService implements PedidoServiceInterface {
                 Produto produto = produtos.stream()
                     .filter(p -> p.getId().equals(itemDTO.produtoId()))
                     .findFirst()
-                    .orElseThrow(() -> new IllegalArgumentException(
+                    .orElseThrow(() -> new EntityNotFoundException(
                         "Produto com ID " + itemDTO.produtoId() + " não encontrado."
                     ));
 
@@ -248,7 +250,7 @@ public class PedidoService implements PedidoServiceInterface {
     @Override
     public List<PedidoResponseDTO> buscarPedidosPorRestaurante(Long restauranteId, StatusPedido status) {
         List<Pedido> pedidos = pedidoRepository.findByRestauranteId(restauranteId, status)
-        .orElseThrow(() -> new IllegalArgumentException("Pedidos não encontrados para o restaurante de ID " + restauranteId));
+        .orElseThrow(() -> new EntityNotFoundException("Pedidos não encontrados para o restaurante de ID " + restauranteId));
 
         return PedidoResponseDTO.fromEntities(pedidos);
 

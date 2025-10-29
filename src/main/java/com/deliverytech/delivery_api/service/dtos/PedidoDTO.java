@@ -23,7 +23,7 @@ public record PedidoDTO(
     BigDecimal valorTotal,
     @Size(max = 500, message = "Observações não podem exceder 500 caracteres")
     String observacoes,
-    @NotEmpty(message = "Endereço é obrigatório")   
+    @NotNull(message = "Endereço é obrigatório")   
     @Valid
     EnderecoDTO enderecoDeEntrega,
     @NotNull(message = "Cliente é obrigatório") 

@@ -1,7 +1,8 @@
 package com.deliverytech.delivery_api.service;
 
 import com.deliverytech.delivery_api.entity.Produto; 
-import com.deliverytech.delivery_api.entity.Restaurante; 
+import com.deliverytech.delivery_api.entity.Restaurante;
+import com.deliverytech.delivery_api.exception.EntityNotFoundException;
 import com.deliverytech.delivery_api.repository.ProdutoRepository; 
 import com.deliverytech.delivery_api.repository.RestauranteRepository;
 import com.deliverytech.delivery_api.service.dtos.ProdutoDTO;
@@ -34,7 +35,7 @@ public class ProdutoService implements ProdutoServiceInterface {
     @Override
     public ProdutoResponseDTO cadastrar(ProdutoDTO produtoDTO, Long restauranteId) { 
         Restaurante restaurante = restauranteRepository.findById(restauranteId) 
-            .orElseThrow(() -> new IllegalArgumentException("Restaurante não encontrado: " + restauranteId)); 
+            .orElseThrow(() -> new EntityNotFoundException("Restaurante não encontrado: " + restauranteId)); 
 
         Produto produto = new Produto(
             produtoDTO.nome(),
@@ -72,7 +73,7 @@ public class ProdutoService implements ProdutoServiceInterface {
         List<Produto> produtos = produtoRepository.findByCategoriaAndDisponivelTrue(categoria);
 
         if(produtos.isEmpty()) {
-            throw new IllegalArgumentException("Nenhum produto encontrado na categoria: " + categoria);
+            throw new EntityNotFoundException("Nenhum produto encontrado na categoria: " + categoria);
         }
 
         return ProdutoResponseDTO.fromEntities(produtos);
@@ -85,7 +86,7 @@ public class ProdutoService implements ProdutoServiceInterface {
     public ProdutoResponseDTO atualizar(Long id, ProdutoDTO produtoAtualizado) { 
 
         produtoRepository.findById(id) 
-            .orElseThrow(() -> new IllegalArgumentException("Produto não encontrado: " + id)); 
+            .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado: " + id)); 
         
         //Todo: validar se o produto pertence ao restaurante
 
@@ -109,7 +110,7 @@ public class ProdutoService implements ProdutoServiceInterface {
     @Override
     public ProdutoResponseDTO alterarDisponibilidade(Long produtoId, boolean disponivel) { 
         Produto produto = produtoRepository.findById(produtoId) 
-            .orElseThrow(() -> new IllegalArgumentException("Produto não encontrado: " + produtoId)); 
+            .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado: " + produtoId)); 
  
         produto.setDisponivel(disponivel); 
         produtoRepository.save(produto); 
@@ -132,7 +133,7 @@ public class ProdutoService implements ProdutoServiceInterface {
     @Override
     public void remover(Long id) {
         Produto produto = produtoRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("Produto não encontrado: " + id));
+            .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado: " + id));
 
         produtoRepository.delete(produto);
     }
@@ -141,7 +142,7 @@ public class ProdutoService implements ProdutoServiceInterface {
     @Override
     public ProdutoResponseDTO buscarPorId(Long id) {
         Produto produto = produtoRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("Produto não encontrado: " + id));
+            .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado: " + id));
 
         return ProdutoResponseDTO.fromEntity(produto);
     } 

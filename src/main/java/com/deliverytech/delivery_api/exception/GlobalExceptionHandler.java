@@ -26,7 +26,7 @@ public class GlobalExceptionHandler {
             ex.getMessage(),
             LocalDateTime.now(),
             request.getDescription(false).replace("uri=", ""),
-            "ENTITY_NOT_FOUND",
+            ex.getErrorCode(),
             errors);
 
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
@@ -41,7 +41,7 @@ public class GlobalExceptionHandler {
             ex.getMessage(),
             LocalDateTime.now(),
             request.getDescription(false).replace("uri=", ""),
-            "VALIDATION_ERROR",
+            ex.getErrorCode(),
             errors 
 
         );
@@ -103,15 +103,15 @@ public class GlobalExceptionHandler {
         ApiErrorResponse errorResponse = new ApiErrorResponse( 
             HttpStatus.CONFLICT.value(), 
             "Conflito de dados", 
-            "Erro de conflito de dados",
+            ex.getMessage(),
             LocalDateTime.now(),
             request.getDescription(false).replace("uri=", ""),
-            "CONFLICT_ERROR",
+            ex.getErrorCode(),
             details 
         ); 
        
  
-       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+       return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
     }
 
     

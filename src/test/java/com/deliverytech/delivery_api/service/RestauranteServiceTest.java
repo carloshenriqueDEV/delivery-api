@@ -139,7 +139,7 @@ class RestauranteServiceTest {
     @DisplayName("Deve buscar restaurantes por categoria")
     void deveBuscarPorCategoria() {
         when(restauranteRepository.findByCategoriaAndAtivoTrue("Brasileira"))
-                .thenReturn(List.of(restaurante));
+                .thenReturn(Optional.of(List.of(restaurante)));
 
         List<RestauranteResponseDTO> lista = restauranteService.buscarPorCategoria("Brasileira");
 

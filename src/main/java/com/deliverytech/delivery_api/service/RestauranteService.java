@@ -1,6 +1,8 @@
 package com.deliverytech.delivery_api.service;
 
 import com.deliverytech.delivery_api.entity.Restaurante;
+import com.deliverytech.delivery_api.exception.ConflictException;
+import com.deliverytech.delivery_api.exception.EntityNotFoundException;
 import com.deliverytech.delivery_api.external.DistanceApiClient;
 import com.deliverytech.delivery_api.repository.RestauranteRepository;
 import com.deliverytech.delivery_api.service.dtos.RestauranteDTO;
@@ -29,8 +31,8 @@ public class RestauranteService implements RestauranteServiceInterface {
     @Override
     public RestauranteResponseDTO cadastrar(RestauranteDTO restauranteDTO) { 
         // Validar nome único 
-        if (restauranteRepository.findByNome(restauranteDTO.nome()).isPresent()) { 
-            throw new IllegalArgumentException("Restaurante já cadastrado: " + 
+        if (restauranteRepository.findByNomeIgnoreCase(restauranteDTO.nome()).isPresent()) { 
+            throw new ConflictException("Restaurante já cadastrado: " + 
                 restauranteDTO.nome()); 
         } 
         Restaurante restaurante = new Restaurante(
@@ -54,7 +56,7 @@ public class RestauranteService implements RestauranteServiceInterface {
     @Override
     public RestauranteResponseDTO buscarPorId(Long id) { 
        Restaurante restaurante = restauranteRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("Restaurante não encontrado: " + id)); 
+            .orElseThrow(() -> new EntityNotFoundException("Restaurante não encontrado: " + id)); 
          
         return RestauranteResponseDTO.fromEntity(restaurante);
     } 
@@ -78,6 +80,7 @@ public class RestauranteService implements RestauranteServiceInterface {
     @Override
     public List<RestauranteResponseDTO> buscarPorCategoria(String categoria) { 
         return restauranteRepository.findByCategoriaAndAtivoTrue(categoria)
+        .orElseThrow(() -> new EntityNotFoundException("Nenhum restaurante foi encontrado com a seguinte categoria: " + categoria))
             .stream() 
             .map(r -> RestauranteResponseDTO.fromEntity(r)) 
             .toList(); 
@@ -89,12 +92,12 @@ public class RestauranteService implements RestauranteServiceInterface {
     @Override
     public RestauranteResponseDTO atualizar(Long id, RestauranteDTO restauranteAtualizado) { 
         Restaurante restaurante = restauranteRepository.findByIdAndAtivoTrue(id)
-            .orElseThrow(() -> new IllegalArgumentException("Restaurante não encontrado: " + restauranteAtualizado.id())); 
+            .orElseThrow(() -> new EntityNotFoundException("Restaurante não encontrado: " + restauranteAtualizado.id())); 
  
         // Verificar nome único (se mudou) 
         if (!restaurante.getNome().equals(restauranteAtualizado.nome()) && 
             restauranteRepository.findByNome(restauranteAtualizado.nome()).isPresent()) { 
-            throw new IllegalArgumentException("Nome já cadastrado: " + 
+            throw new ConflictException("Nome já cadastrado: " + 
             restauranteAtualizado.nome()); 
         } 
         
@@ -120,7 +123,7 @@ public class RestauranteService implements RestauranteServiceInterface {
     @Override
     public RestauranteResponseDTO ativarDesativar(Long id, Boolean ativo) { 
         Restaurante restaurante = restauranteRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("Restaurante não encontrado: " + id)); 
+            .orElseThrow(() -> new EntityNotFoundException("Restaurante não encontrado: " + id)); 
  
         restaurante.setAtivo(ativo); 
         restauranteRepository.save(restaurante); 
@@ -131,14 +134,14 @@ public class RestauranteService implements RestauranteServiceInterface {
     @Override
     public RestauranteResponseDTO buscarProdutos(Long id) {
         Restaurante restaurante = restauranteRepository.findRestauranteComProdutosDisponiveis(id)
-        .orElseThrow(() -> new IllegalArgumentException("Restaurante não encontrado: " + id));
+        .orElseThrow(() -> new EntityNotFoundException("Restaurante não encontrado: " + id));
 
         return RestauranteResponseDTO.fromEntity(restaurante);
     } 
 
     public BigDecimal calcularTaxaDeEntrega(Long id, String cepCliente){
         Restaurante restaurante = restauranteRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("Restaurante não encontrado: " + id));
+            .orElseThrow(() -> new EntityNotFoundException("Restaurante não encontrado: " + id));
 
         BigDecimal distancia = this.distanceApiClient.calcularDistanciaKm(restaurante.getEndereco().getCep() ,cepCliente);
         

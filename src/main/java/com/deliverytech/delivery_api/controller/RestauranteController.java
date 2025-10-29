@@ -34,6 +34,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 //Todo: incluir paginação nos endpoints que trazem uma grande massa de dados
 //Todo: incluir api response wrapper para todos os endpoint
 //Todo: Excluir endpoint's redundantes
+//Todo: incluir versionamento de api
 
 @RestController
 @RequestMapping("/api/restaurantes")

@@ -11,8 +11,8 @@ import com.deliverytech.delivery_api.validation.ValidTelefone;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
 
 @Schema(description = "Dados para cadastro de restaurante") 
@@ -34,7 +34,7 @@ public record RestauranteDTO(
 
      @Schema(description = "Endereço completo do restaurante", 
             example = "Rua das Flores, 123 - Centro")
-   @NotEmpty(message = "Endereço é obrigatório")   
+   @NotNull(message = "Endereço é obrigatório")   
    @Valid
    EnderecoDTO endereco, 
 
@@ -47,7 +47,7 @@ public record RestauranteDTO(
     @Schema(description = "Taxa de entrega em reais", 
             example = "5.50", 
             minimum = "0")
-    @NotEmpty(message = "Taxa de entrega é obrigatória") 
+    @NotNull(message = "Taxa de entrega é obrigatória") 
     @DecimalMin(value = "0.0", message = "Taxa de entrega deve ser positiva") 
     BigDecimal taxaEntrega, 
     boolean ativo, 

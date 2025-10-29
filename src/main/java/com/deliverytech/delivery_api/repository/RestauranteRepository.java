@@ -18,12 +18,13 @@ public interface RestauranteRepository extends JpaRepository<Restaurante, Long> 
     // Buscar por nome 
     Optional <Restaurante> findByNome(String nome); 
     Optional <Restaurante> findByIdAndAtivoTrue(Long id);
+    Optional<Restaurante> findByNomeIgnoreCase(String nome);
  
     // Buscar restaurantes a vos 
     List<Restaurante> findByAtivoTrue(); 
  
     // Buscar por categoria 
-    List<Restaurante> findByCategoriaAndAtivoTrue(String categoria); 
+    Optional<List<Restaurante>> findByCategoriaAndAtivoTrue(String categoria); 
 
      @Query("""
         SELECT DISTINCT r 
