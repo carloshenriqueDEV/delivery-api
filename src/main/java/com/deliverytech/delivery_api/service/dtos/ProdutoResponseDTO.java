@@ -11,7 +11,7 @@ public record ProdutoResponseDTO(
     BigDecimal preco, 
     String categoria, 
     boolean disponivel,
-    RestauranteResponseDTO restaurante
+    Long restauranteId
 ) {
     /**
      * Converte uma entidade Produto em ProdutoResponseDTO
@@ -28,7 +28,7 @@ public record ProdutoResponseDTO(
             produto.getPreco(),
             produto.getCategoria(),
             produto.getDisponivel(),
-            RestauranteResponseDTO.fromEntity(produto.getRestaurante())
+            produto.getRestaurante().getId()
         );
     }
 

@@ -15,7 +15,8 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus; 
-import org.springframework.http.ResponseEntity; 
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -45,6 +46,7 @@ public class PedidoController {
         @ApiResponse(responseCode = "404", description = "Cliente ou restaurante não encontrado"), 
         @ApiResponse(responseCode = "409", description = "Produto indisponível") 
     }) 
+    @PreAuthorize("hasRole('CLIENTE')")
     public ResponseEntity<PedidoResponseDTO> criarPedido(@RequestBody @Valid 
             @io.swagger.v3.oas.annotations.parameters.RequestBody( 
                 description = "Dados do pedido a ser criado" 
@@ -54,24 +56,92 @@ public class PedidoController {
     } 
  
     /** 
-     * Adicionar item ao pedido 
-     */ 
-    @PostMapping("/{pedidoId}/itens") 
-    public ResponseEntity<PedidoResponseDTO> adicionarItem(@PathVariable Long pedidoId, 
-                                         @Valid ItemPedidoDTO itemPedidoDTO) { 
-        
-        PedidoResponseDTO pedido = pedidoService.adicionarItem(pedidoId, itemPedidoDTO.produtoId(), itemPedidoDTO.quantidade()); 
-        return ResponseEntity.ok(pedido); 
-       
-    } 
- 
-    /** 
      * Confirmar pedido 
      */ 
     @PatchMapping("/{pedidoId}/confirmar") 
+    @Operation(summary = "Confirma recebimento do pedido", 
+               description = "Atualiza o status de um pedido para confirmado") 
+    @ApiResponses({ 
+        @ApiResponse(responseCode = "200", description = "Status atualizado com sucesso"), 
+        @ApiResponse(responseCode = "404", description = "Pedido não encontrado"), 
+        @ApiResponse(responseCode = "400", description = "Transição de status inválida") 
+    })
+    @PreAuthorize("hasRole('RESTAURANTE')") 
     public ResponseEntity<PedidoResponseDTO> confirmarPedido(@PathVariable Long pedidoId) { 
   
         PedidoResponseDTO pedido = pedidoService.atualizarStatus(pedidoId, StatusPedido.CONFIRMADO, null); 
+        return ResponseEntity.ok(pedido); 
+    } 
+
+    /** 
+     * Preparar pedido 
+     */ 
+    @PatchMapping("/{pedidoId}/preperar") 
+    @Operation(summary = "Informa o início do preparo do pedido", 
+               description = "Atualiza o status de um pedido para preparando") 
+    @ApiResponses({ 
+        @ApiResponse(responseCode = "200", description = "Status atualizado com sucesso"), 
+        @ApiResponse(responseCode = "404", description = "Pedido não encontrado"), 
+        @ApiResponse(responseCode = "400", description = "Transição de status inválida") 
+    })
+    @PreAuthorize("hasRole('RESTAURANTE')") 
+    public ResponseEntity<PedidoResponseDTO> PrepararPedido(@PathVariable Long pedidoId) { 
+  
+        PedidoResponseDTO pedido = pedidoService.atualizarStatus(pedidoId, StatusPedido.PREPARANDO, null); 
+        return ResponseEntity.ok(pedido); 
+    } 
+
+    /** 
+     * Enviar para entrega pedido 
+     */ 
+    @PatchMapping("/{pedidoId}/enviar-para-entrega") 
+    @Operation(summary = "Informa que o pedido saiu para entrega", 
+               description = "Atualiza o status de um pedido para saiu para entrega") 
+    @ApiResponses({ 
+        @ApiResponse(responseCode = "200", description = "Status atualizado com sucesso"), 
+        @ApiResponse(responseCode = "404", description = "Pedido não encontrado"), 
+        @ApiResponse(responseCode = "400", description = "Transição de status inválida") 
+    })
+    @PreAuthorize("hasRole('RESTAURANTE')") 
+    public ResponseEntity<PedidoResponseDTO> EnviarParaEntregaPedido(@PathVariable Long pedidoId) { 
+  
+        PedidoResponseDTO pedido = pedidoService.atualizarStatus(pedidoId, StatusPedido.SAIU_PARA_ENTREGA, null); 
+        return ResponseEntity.ok(pedido); 
+    } 
+
+    /** 
+     * Cancelar pedido 
+     */ 
+    @PatchMapping("/{pedidoId}/cancelar") 
+    @Operation(summary = "Informar o cancelamento de um pedido", 
+               description = "Atualiza o status de um pedido para cancelado") 
+    @ApiResponses({ 
+        @ApiResponse(responseCode = "200", description = "Status atualizado com sucesso"), 
+        @ApiResponse(responseCode = "404", description = "Pedido não encontrado"), 
+        @ApiResponse(responseCode = "400", description = "Transição de status inválida") 
+    })
+    @PreAuthorize("hasRole('CLIENTE')") 
+    public ResponseEntity<PedidoResponseDTO> CancelarPedido(@PathVariable Long pedidoId, @Parameter(description = "Motivo da alteração. (obrigatório apenas para cancelamento.)") @RequestParam String motivo) { 
+  
+        PedidoResponseDTO pedido = pedidoService.atualizarStatus(pedidoId, StatusPedido.CANCELADO, motivo); 
+        return ResponseEntity.ok(pedido); 
+    } 
+
+    /** 
+     * Entregar pedido 
+     */ 
+    @PatchMapping("/{pedidoId}/Entregar") 
+    @Operation(summary = "Informa que o pedido foi entregue", 
+               description = "Atualiza o status de um pedido para entregue") 
+    @ApiResponses({ 
+        @ApiResponse(responseCode = "200", description = "Status atualizado com sucesso"), 
+        @ApiResponse(responseCode = "404", description = "Pedido não encontrado"), 
+        @ApiResponse(responseCode = "400", description = "Transição de status inválida") 
+    })
+    @PreAuthorize("hasRole('ENTREGADOR')") 
+    public ResponseEntity<PedidoResponseDTO> EntregarPedido(@PathVariable Long pedidoId) { 
+  
+        PedidoResponseDTO pedido = pedidoService.atualizarStatus(pedidoId, StatusPedido.ENTREGUE, null); 
         return ResponseEntity.ok(pedido); 
     } 
  
@@ -99,6 +169,7 @@ public class PedidoController {
         @ApiResponse(responseCode = "200", description = "Histórico recuperado com sucesso"), 
         @ApiResponse(responseCode = "404", description = "Cliente não encontrado") 
     })
+    @PreAuthorize("hasRole('CLIENTE')")
     public ResponseEntity<List<PedidoResponseDTO>> listarPorCliente( @Parameter(description = "ID do cliente")  @PathVariable Long clienteId) { 
         List<PedidoResponseDTO> pedidos = pedidoService.buscarPorCliente(clienteId); 
         return ResponseEntity.ok(pedidos); 
@@ -112,24 +183,6 @@ public class PedidoController {
         PedidoResponseDTO pedido = pedidoService.buscarPorNumero(numeroPedido); 
         return ResponseEntity.ok(pedido);
   
-    } 
- 
-    /** 
-     * Atualizar status do pedido 
-     */ 
-    @PatchMapping("/{pedidoId}/status") 
-    @Operation(summary = "Atualizar status do pedido", 
-               description = "Atualiza o status de um pedido") 
-    @ApiResponses({ 
-        @ApiResponse(responseCode = "200", description = "Status atualizado com sucesso"), 
-        @ApiResponse(responseCode = "404", description = "Pedido não encontrado"), 
-        @ApiResponse(responseCode = "400", description = "Transição de status inválida") 
-    })
-    public ResponseEntity<PedidoResponseDTO> atualizarStatus(@Parameter(description = "ID do pedido")  @PathVariable Long pedidoId, 
-                                            @Parameter(description = "Status do pedido") @RequestParam StatusPedido status,@Parameter(description = "Motivo da alteração. (obrigatório apenas para cancelamento.)") @RequestParam String motivo) { 
-        PedidoResponseDTO pedido = pedidoService.atualizarStatus(pedidoId, status, motivo); 
-        return ResponseEntity.ok(pedido); 
-   
     } 
 
     @PostMapping("/calcular")
@@ -156,6 +209,7 @@ public class PedidoController {
     @ApiResponses({ 
         @ApiResponse(responseCode = "200", description = "Lista recuperada com sucesso") 
     }) 
+    @PreAuthorize("hasRole('ADMIN')") 
     public ResponseEntity<List<PedidoResponseDTO>> listar( 
             @Parameter(description = "Status do pedido") 
             @RequestParam(required = false) StatusPedido status, 
@@ -180,6 +234,7 @@ public class PedidoController {
         @ApiResponse(responseCode = "200", description = "Pedidos recuperados com sucesso"), 
         @ApiResponse(responseCode = "404", description = "Restaurante não encontrado") 
     }) 
+    @PreAuthorize("hasRole('RESTAURANTE')") 
     public ResponseEntity<List<PedidoResponseDTO>> buscarPorRestaurante( 
         @Parameter(description = "ID do restaurante") 
         @PathVariable Long restauranteId, 

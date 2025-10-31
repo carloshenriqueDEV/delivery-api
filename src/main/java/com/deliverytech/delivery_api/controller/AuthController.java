@@ -1,37 +1,86 @@
-// AuthController.java
 package com.deliverytech.delivery_api.controller;
 
-import com.deliverytech.delivery_api.security.JwtProvider;
-import com.deliverytech.delivery_api.service.CustomUserDetailsService;
+import com.deliverytech.delivery_api.service.dtos.*;
+import com.deliverytech.delivery_api.entity.Usuario;
+import com.deliverytech.delivery_api.security.JwtUtil;
+import com.deliverytech.delivery_api.security.SecurityUtils;
+import com.deliverytech.delivery_api.service.AuthService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.*;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.authentication.AuthenticationManager;
+
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+
 import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/auth")
+@CrossOrigin(origins = "*")
 public class AuthController {
 
-    private final AuthenticationManager authenticationManager;
-    private final JwtProvider jwtProvider;
+    @Autowired
+    private AuthenticationManager authenticationManager;
 
-    public AuthController(AuthenticationManager authenticationManager, JwtProvider jwtProvider) {
-        this.authenticationManager = authenticationManager;
-        this.jwtProvider = jwtProvider;
-    }
+    @Autowired
+    private AuthService authService;
 
-    record LoginRequest(String username, String password) {}
+    @Autowired
+    private JwtUtil jwtUtil;
 
-    record LoginResponse(String token) {}
+    @Autowired
+    PasswordEncoder encoder;
+   
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
-        Authentication auth = authenticationManager
-            .authenticate(new UsernamePasswordAuthenticationToken(request.username(), request.password()));
+    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest loginRequest) {
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getSenha())
+            );
 
-        String token = jwtProvider.generateToken(auth.getName());
-        return ResponseEntity.ok(new LoginResponse(token));
+            UserDetails userDetails = authService.loadUserByUsername(loginRequest.getEmail());
+
+            String token = jwtUtil.generateToken(userDetails);
+
+            Usuario usuario = (Usuario) userDetails;
+            UserResponse userResponse = new UserResponse(usuario);
+            LoginResponse loginResponse = new LoginResponse(token, jwtUtil.getExpirationInMillis(), userResponse);
+
+            return ResponseEntity.ok(loginResponse);
+
+        } catch (BadCredentialsException e) {
+            return ResponseEntity.status(401).body("Credenciais inválidas");
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Erro interno do servidor: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest registerRequest) {
+        try {
+           
+            Usuario novoUsuario = authService.criarUsuario(registerRequest);
+
+            UserResponse userResponse = new UserResponse(novoUsuario);
+            return ResponseEntity.status(201).body(userResponse);
+
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Erro ao criar usuário: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<?> getCurrentUser() {
+        try {
+            Usuario usuarioLogado = SecurityUtils.getCurrentUser();
+            UserResponse userResponse = new UserResponse(usuarioLogado);
+            return ResponseEntity.ok(userResponse);
+        } catch (Exception e) {
+            return ResponseEntity.status(401).body("Usuário não autenticado");
+        }
     }
 }

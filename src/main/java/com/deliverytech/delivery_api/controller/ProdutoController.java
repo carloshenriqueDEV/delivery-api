@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -45,6 +46,7 @@ public class ProdutoController {
         @ApiResponse(responseCode = "400", description = "Dados inválidos"), 
         @ApiResponse(responseCode = "404", description = "Restaurante não encontrado") 
     })
+    @PreAuthorize("hasRole('RESTAURANTE') or hasRole('ADMIN')")
     public ResponseEntity<ProdutoResponseDTO> cadastrar(
         @io.swagger.v3.oas.annotations.parameters.RequestBody( 
                 description = "Dados do produto a ser criado" 
@@ -66,7 +68,7 @@ public class ProdutoController {
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(produto);
     }
 
-    @GetMapping("/{restauranteId}")
+    @GetMapping("restaurante/{restauranteId}")
     public ResponseEntity<List<ProdutoResponseDTO>> produtosPorRestaurante(@PathVariable long restauranteId) {
         List<ProdutoResponseDTO> produtos = produtoService.buscarProdutosPorRestaurante(restauranteId);
 
@@ -81,6 +83,7 @@ public class ProdutoController {
         @ApiResponse(responseCode = "404", description = "Produto não encontrado"), 
         @ApiResponse(responseCode = "400", description = "Dados inválidos") 
     }) 
+     @PreAuthorize("hasRole('ADMIN') or @produtoService.isOwner(#id)")
     public ResponseEntity<ProdutoResponseDTO> atualizarProduto(@Parameter(description = "ID do produto") @PathVariable Long id, 
     @io.swagger.v3.oas.annotations.parameters.RequestBody( 
                 description = "Dados do produto a ser atualizado" 

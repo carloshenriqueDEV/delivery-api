@@ -1,5 +1,6 @@
 package com.deliverytech.delivery_api.exception;
 
+import java.io.Console;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -76,6 +77,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiErrorResponse> handleGenericExption(Exception ex, WebRequest request){
         Map<String, String> erros = new HashMap<>(); 
+        ex.printStackTrace();
+
         ApiErrorResponse errorResponse = new ApiErrorResponse(
             HttpStatus.INTERNAL_SERVER_ERROR.value(),
             "Erro interno do servidor",

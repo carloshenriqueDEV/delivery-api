@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -54,6 +55,7 @@ public class RestauranteController {
         @ApiResponse(responseCode = "400", description = "Dados inválidos"),
         @ApiResponse(responseCode = "500", description = "Erro interno"),
     })
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<RestauranteResponseDTO> cadastrar(
         @RequestBody 
         @Valid 
@@ -76,6 +78,7 @@ public class RestauranteController {
         @ApiResponse(responseCode = "200", description = "Restaurante encontrado"), 
         @ApiResponse(responseCode = "404", description = "Restaurante não encontrado") 
     })
+
     public ResponseEntity<RestauranteResponseDTO> buscarPorId(
        @Parameter(description = "ID do restaurante")  
        @PathVariable Long id) {
@@ -121,6 +124,7 @@ public class RestauranteController {
         @ApiResponse(responseCode = "404", description = "Restaurante não encontrado"), 
         @ApiResponse(responseCode = "400", description = "Dados inválidos") 
     })
+    @PreAuthorize("hasRole('ADMIN') or (hasRole('RESTAURANTE') and @restauranteService.isOwner(#id))") 
     public ResponseEntity<RestauranteResponseDTO> atualizarRestaurante(
         @Parameter(description = "ID do restaurante") @PathVariable Long id, 
         @io.swagger.v3.oas.annotations.parameters.RequestBody(

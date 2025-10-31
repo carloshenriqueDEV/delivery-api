@@ -8,6 +8,8 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import com.deliverytech.delivery_api.entity.Cliente;
@@ -16,8 +18,10 @@ import com.deliverytech.delivery_api.entity.ItemPedido;
 import com.deliverytech.delivery_api.entity.Pedido;
 import com.deliverytech.delivery_api.entity.Produto;
 import com.deliverytech.delivery_api.entity.Restaurante;
+import com.deliverytech.delivery_api.entity.Usuario;
+import com.deliverytech.delivery_api.enums.Role;
 import com.deliverytech.delivery_api.enums.StatusPedido;
-import com.deliverytech.delivery_api.repository.*;;
+import com.deliverytech.delivery_api.repository.*;
 
 @Component
 public class DataLoader implements CommandLineRunner{
@@ -29,12 +33,16 @@ public class DataLoader implements CommandLineRunner{
     RestauranteRepository restauranteRepository;
     @Autowired
     ProdutoRepository produtoRepository;
+    @Autowired
+    UsuarioRepository usuarioRepository;
+   
 
     @Override
     public void run(String... args) throws Exception {
        System.out.println("=== INICIANDO CARGA DE DADOS DE TESTE ===");
        carregarClientes();
-       carregarRestaurantes();       
+       carregarRestaurantes(); 
+       carregarUsuarios();      
        testarConsultas();
        System.out.println("=== CARGA DE DADOS DE TESTE CONCLUÍDA ===");
     }
@@ -137,6 +145,12 @@ public class DataLoader implements CommandLineRunner{
         }
     }
 
+    private void carregarUsuarios(){
+        PasswordEncoder encoder = new BCryptPasswordEncoder();
+       String senha = encoder.encode("fhal123@$");
+       Usuario usuario = new Usuario("carlos@delivery.com.br", senha, "carlos", Role.ADMIN);
+       usuarioRepository.save(usuario);
+    }
     private void testarConsultas(){
         System.out.println("== TESTANDO CONSULTAS DOS REPOSITORIES ==");
         System.out.println("\n Testes ClientRepository" );
