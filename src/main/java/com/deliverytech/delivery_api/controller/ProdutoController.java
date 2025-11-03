@@ -25,14 +25,18 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 //Todo: incluir paginação nos endpoints que trazem uma grande massa de dados
 //Todo: incluir api response wrapper para todos os endpoint
 //Todo: remover endpoints redundantes
 //Todo: incluir versionamento de api
+//Todo: Unificar o os endppoints de busca em um único endpoint com múltiplos filtros
 @RestController
 @RequestMapping("/api/produtos")
+@Tag(name = "Produtos", description = "Operações relacionadas ao gerenciamento de produtos dos restaurantes") 
 @CrossOrigin("*")
 public class ProdutoController {
     @Autowired
@@ -40,7 +44,10 @@ public class ProdutoController {
 
     @PostMapping()
     @Operation(summary = "Cadastrar produto", 
-               description = "Cria um novo produto no sistema") 
+               description = "Cria um novo produto no sistema",
+                security = @SecurityRequirement(name = "Bearer Authentication"), 
+                tags = {"Produtos"}
+               )
     @ApiResponses({ 
         @ApiResponse(responseCode = "201", description = "Produto criado com sucesso"), 
         @ApiResponse(responseCode = "400", description = "Dados inválidos"), 
@@ -65,14 +72,14 @@ public class ProdutoController {
     })
     public ResponseEntity<ProdutoResponseDTO> buscarPorId(@Parameter(description = "ID do produto")  @PathVariable Long id) {
         ProdutoResponseDTO produto = produtoService.buscarPorId(id);
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body(produto);
+        return ResponseEntity.status(HttpStatus.OK).body(produto);
     }
 
     @GetMapping("restaurante/{restauranteId}")
     public ResponseEntity<List<ProdutoResponseDTO>> produtosPorRestaurante(@PathVariable long restauranteId) {
         List<ProdutoResponseDTO> produtos = produtoService.buscarProdutosPorRestaurante(restauranteId);
 
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body(produtos);
+        return ResponseEntity.status(HttpStatus.OK).body(produtos);
     }
 
     @PutMapping("/{id}")
@@ -91,7 +98,7 @@ public class ProdutoController {
     @Valid @RequestBody ProdutoDTO produtoDTO){
         ProdutoResponseDTO produto = produtoService.atualizar(id, produtoDTO);
 
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body(produto);
+        return ResponseEntity.status(HttpStatus.OK).body(produto);
     }
     
     @PatchMapping("/{id}/disponibilidade/{value}")
@@ -104,7 +111,7 @@ public class ProdutoController {
     public ResponseEntity<ProdutoResponseDTO> alterarDisponibilidade(@PathVariable Long id, @PathVariable boolean value){
         ProdutoResponseDTO produto = produtoService.alterarDisponibilidade(id, value);
 
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body(produto);
+        return ResponseEntity.status(HttpStatus.OK).body(produto);
     }
 
       @GetMapping("/categoria/{categoria}") 

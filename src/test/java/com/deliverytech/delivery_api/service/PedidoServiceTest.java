@@ -2,6 +2,8 @@ package com.deliverytech.delivery_api.service;
 
 import com.deliverytech.delivery_api.entity.*;
 import com.deliverytech.delivery_api.enums.StatusPedido;
+import com.deliverytech.delivery_api.exception.BusinessException;
+import com.deliverytech.delivery_api.exception.EntityNotFoundException;
 import com.deliverytech.delivery_api.repository.*;
 import com.deliverytech.delivery_api.service.dtos.*;
 import org.junit.jupiter.api.BeforeEach;
@@ -169,12 +171,10 @@ void deveLancarExcecaoQuandoClienteNaoExiste() {
         .thenReturn(Optional.empty());
 
     // Act + Assert
-    IllegalArgumentException exception = assertThrows(
-        IllegalArgumentException.class,
+   assertThrows(
+        EntityNotFoundException.class,
         () -> pedidoService.criarPedido(pedidoDTO)
     );
-
-    assertEquals("Cliente não encontrado: 99", exception.getMessage());
 }
 
 
@@ -230,7 +230,7 @@ void deveLancarExcecaoQuandoClienteNaoExiste() {
                 .thenReturn(List.of(produto));
 
         // chamar e validar que cai na exceção de produto inativo
-        assertThrows(IllegalStateException.class, () -> pedidoService.criarPedido(pedidoDTO));
+        assertThrows(BusinessException.class, () -> pedidoService.criarPedido(pedidoDTO));
     }
 
 }

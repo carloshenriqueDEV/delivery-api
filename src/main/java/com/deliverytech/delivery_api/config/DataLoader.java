@@ -21,7 +21,11 @@ import com.deliverytech.delivery_api.entity.Restaurante;
 import com.deliverytech.delivery_api.entity.Usuario;
 import com.deliverytech.delivery_api.enums.Role;
 import com.deliverytech.delivery_api.enums.StatusPedido;
-import com.deliverytech.delivery_api.repository.*;
+import com.deliverytech.delivery_api.repository.ClienteRepository;
+import com.deliverytech.delivery_api.repository.PedidoRepository;
+import com.deliverytech.delivery_api.repository.ProdutoRepository;
+import com.deliverytech.delivery_api.repository.RestauranteRepository;
+import com.deliverytech.delivery_api.repository.UsuarioRepository;
 
 @Component
 public class DataLoader implements CommandLineRunner{

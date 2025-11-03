@@ -52,14 +52,16 @@ public class SecurityConfig {
                 // permitir preflight OPTIONS globalmente
                 .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers(
-                    "/api/auth/**",
+                    "/api/auth/login",
+                    "/api/auth/register",
                     "/api/restaurantes/**",
                     "/api/produtos/**",
                     "/swagger-ui/**",
                     "/swagger-ui.html",
-                    "/v3/api-docs/**",
+                    "/api-docs/**",
                     "/actuator/health",
-                    "/h2-console/**"
+                    "/h2-console/**",
+                    "/actuator/health"
                 ).permitAll()
                 .anyRequest().authenticated()
             )

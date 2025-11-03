@@ -2,6 +2,8 @@ package com.deliverytech.delivery_api.service;
 
 import com.deliverytech.delivery_api.entity.Cliente;
 import com.deliverytech.delivery_api.entity.Endereco;
+import com.deliverytech.delivery_api.exception.ConflictException;
+import com.deliverytech.delivery_api.exception.EntityNotFoundException;
 import com.deliverytech.delivery_api.repository.ClienteRepository;
 import com.deliverytech.delivery_api.service.dtos.ClienteDTO;
 import com.deliverytech.delivery_api.service.dtos.ClienteResponseDTO;
@@ -65,7 +67,7 @@ class ClienteServiceTest {
     void deveLancarExcecaoAoCadastrarComEmailExistente() {
         when(clienteRepository.existsByEmail(clienteDTO.email())).thenReturn(true);
 
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+        ConflictException ex = assertThrows(ConflictException.class,
                 () -> clienteService.cadastrar(clienteDTO));
 
         assertEquals("Email já cadastrado", ex.getMessage());
@@ -90,7 +92,7 @@ class ClienteServiceTest {
     void deveLancarExcecaoAoBuscarClienteInexistentePorId() {
         when(clienteRepository.findById(1L)).thenReturn(Optional.empty());
 
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+        EntityNotFoundException ex = assertThrows(EntityNotFoundException.class,
                 () -> clienteService.buscarPorId(1L));
 
         assertEquals("Cliente não encontrado: 1", ex.getMessage());
@@ -113,7 +115,7 @@ class ClienteServiceTest {
     void deveLancarExcecaoAoBuscarClienteInexistentePorEmail() {
         when(clienteRepository.findByEmail(cliente.getEmail())).thenReturn(Optional.empty());
 
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+        EntityNotFoundException ex = assertThrows(EntityNotFoundException.class,
                 () -> clienteService.buscarPorEmail(cliente.getEmail()));
 
         assertEquals("Cliente não encontrado.", ex.getMessage());
@@ -155,7 +157,7 @@ class ClienteServiceTest {
         when(clienteRepository.findById(1L)).thenReturn(Optional.of(cliente));
         when(clienteRepository.existsByEmail(clienteAtualizado.email())).thenReturn(true);
 
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+        ConflictException ex = assertThrows(ConflictException.class,
                 () -> clienteService.atualizar(1L, clienteAtualizado));
 
         assertTrue(ex.getMessage().contains("Email já cadastrado"));
@@ -191,7 +193,7 @@ class ClienteServiceTest {
     void deveLancarExcecaoAoAtivarDesativarClienteInexistente() {
         when(clienteRepository.findById(1L)).thenReturn(Optional.empty());
 
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+        EntityNotFoundException ex = assertThrows(EntityNotFoundException.class,
                 () -> clienteService.ativarDesativar(1L, false));
 
         assertEquals("Cliente não encontrado: 1", ex.getMessage());

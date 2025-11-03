@@ -3,7 +3,7 @@ Sistema de delivery desnvolvido com Spring Boot e Java 21.
 
 ## 🚀 Tecnologias
 - **Java 21 LTS**
-- Spring Boot 3.5.6
+- Spring Boot 3.5.7
 - Spring Web
 - Spring Data JPA
 - H2 Database

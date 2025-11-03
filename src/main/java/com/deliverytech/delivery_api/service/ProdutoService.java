@@ -101,6 +101,8 @@ public class ProdutoService implements ProdutoServiceInterface {
 
         novaVersaoProduto.setId(id);
 
+        produtoRepository.save(novaVersaoProduto);
+
         return ProdutoResponseDTO.fromEntity(novaVersaoProduto);
     } 
  

@@ -9,6 +9,7 @@ import com.deliverytech.delivery_api.service.dtos.PedidoResponseDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
 
@@ -18,6 +19,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement; 
 
 import java.time.LocalDateTime;
 import java.util.List; 
@@ -28,6 +30,7 @@ import java.util.List;
 //Todo: incluir versionamento de api
 @RestController 
 @RequestMapping("/api/pedidos") 
+@Tag(name = "Pedidos", description = "Operações relacionadas ao gerenciamento de pedidos")
 @CrossOrigin(origins = "*") 
 public class PedidoController { 
  
@@ -39,7 +42,10 @@ public class PedidoController {
      */ 
     @PostMapping 
     @Operation(summary = "Criar pedido", 
-               description = "Cria um novo pedido no sistema") 
+        description = "Cria um novo pedido no sistema",                
+        security = @SecurityRequirement(name = "Bearer Authentication"), 
+        tags = {"Pedidos"} 
+        ) 
     @ApiResponses({ 
         @ApiResponse(responseCode = "201", description = "Pedido criado com sucesso"), 
         @ApiResponse(responseCode = "400", description = "Dados inválidos"), 
@@ -77,8 +83,12 @@ public class PedidoController {
      * Preparar pedido 
      */ 
     @PatchMapping("/{pedidoId}/preperar") 
-    @Operation(summary = "Informa o início do preparo do pedido", 
-               description = "Atualiza o status de um pedido para preparando") 
+    @Operation(
+        summary = "Informa o início do preparo do pedido", 
+        description = "Atualiza o status de um pedido para preparando", 
+        security = @SecurityRequirement(name = "Bearer Authentication"), 
+        tags = {"Pedidos"}
+        ) 
     @ApiResponses({ 
         @ApiResponse(responseCode = "200", description = "Status atualizado com sucesso"), 
         @ApiResponse(responseCode = "404", description = "Pedido não encontrado"), 
@@ -95,8 +105,11 @@ public class PedidoController {
      * Enviar para entrega pedido 
      */ 
     @PatchMapping("/{pedidoId}/enviar-para-entrega") 
-    @Operation(summary = "Informa que o pedido saiu para entrega", 
-               description = "Atualiza o status de um pedido para saiu para entrega") 
+    @Operation(
+        summary = "Informa que o pedido saiu para entrega", 
+        description = "Atualiza o status de um pedido para saiu para entrega",
+        security = @SecurityRequirement(name = "Bearer Authentication"), 
+        tags = {"Pedidos"}) 
     @ApiResponses({ 
         @ApiResponse(responseCode = "200", description = "Status atualizado com sucesso"), 
         @ApiResponse(responseCode = "404", description = "Pedido não encontrado"), 
@@ -113,8 +126,11 @@ public class PedidoController {
      * Cancelar pedido 
      */ 
     @PatchMapping("/{pedidoId}/cancelar") 
-    @Operation(summary = "Informar o cancelamento de um pedido", 
-               description = "Atualiza o status de um pedido para cancelado") 
+    @Operation(
+        summary = "Informar o cancelamento de um pedido", 
+        description = "Atualiza o status de um pedido para cancelado",
+        security = @SecurityRequirement(name = "Bearer Authentication"), 
+        tags = {"Pedidos"}) 
     @ApiResponses({ 
         @ApiResponse(responseCode = "200", description = "Status atualizado com sucesso"), 
         @ApiResponse(responseCode = "404", description = "Pedido não encontrado"), 
@@ -131,8 +147,11 @@ public class PedidoController {
      * Entregar pedido 
      */ 
     @PatchMapping("/{pedidoId}/Entregar") 
-    @Operation(summary = "Informa que o pedido foi entregue", 
-               description = "Atualiza o status de um pedido para entregue") 
+    @Operation(
+        summary = "Informa que o pedido foi entregue", 
+        description = "Atualiza o status de um pedido para entregue",
+        security = @SecurityRequirement(name = "Bearer Authentication"), 
+        tags = {"Pedidos"}) 
     @ApiResponses({ 
         @ApiResponse(responseCode = "200", description = "Status atualizado com sucesso"), 
         @ApiResponse(responseCode = "404", description = "Pedido não encontrado"), 
@@ -149,8 +168,11 @@ public class PedidoController {
      * Buscar pedido por ID 
      */ 
     @GetMapping("/{id}") 
-    @Operation(summary = "Buscar pedido por ID", 
-               description = "Recupera um pedido específico com todos os detalhes") 
+    @Operation(
+        summary = "Buscar pedido por ID", 
+        description = "Recupera um pedido específico com todos os detalhes",
+        security = @SecurityRequirement(name = "Bearer Authentication"), 
+        tags = {"Pedidos"}) 
     @ApiResponses({ 
         @ApiResponse(responseCode = "200", description = "Pedido encontrado"), 
         @ApiResponse(responseCode = "404", description = "Pedido não encontrado") 
@@ -164,7 +186,11 @@ public class PedidoController {
      * Listar pedidos por cliente 
      */ 
     @GetMapping("/{clienteId}") 
-    @Operation(summary = "Histórico do cliente", description = "Lista todos os pedidos de um cliente") 
+    @Operation(summary = "Histórico do cliente", 
+        description = "Lista todos os pedidos de um cliente",
+        security = @SecurityRequirement(name = "Bearer Authentication"), 
+        tags = {"Pedidos"}
+    ) 
     @ApiResponses({ 
         @ApiResponse(responseCode = "200", description = "Histórico recuperado com sucesso"), 
         @ApiResponse(responseCode = "404", description = "Cliente não encontrado") 
@@ -203,7 +229,7 @@ public class PedidoController {
         return ResponseEntity.status(HttpStatus.OK).body(pedido); 
     }
 
-       @GetMapping 
+    @GetMapping 
     @Operation(summary = "Listar pedidos", 
                description = "Lista pedidos") 
     @ApiResponses({ 

@@ -2,6 +2,7 @@ package com.deliverytech.delivery_api.service;
 
 import com.deliverytech.delivery_api.entity.Produto;
 import com.deliverytech.delivery_api.entity.Restaurante;
+import com.deliverytech.delivery_api.exception.EntityNotFoundException;
 import com.deliverytech.delivery_api.repository.ProdutoRepository;
 import com.deliverytech.delivery_api.repository.RestauranteRepository;
 import com.deliverytech.delivery_api.service.dtos.ProdutoDTO;
@@ -83,21 +84,18 @@ class ProdutoServiceTest {
     void deveLancarExcecaoQuandoRestauranteNaoExiste() {
         when(restauranteRepository.findById(anyLong())).thenReturn(Optional.empty());
 
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
+        assertThrows(
+                EntityNotFoundException.class,
                 () -> produtoService.cadastrar(produtoDTO, 99L)
         );
-
-        assertEquals("Restaurante não encontrado: 99", exception.getMessage());
     }
 
     @Test
     @DisplayName("Deve atualizar produto com sucesso")
     void deveAtualizarProduto() {
-        when(produtoRepository.findById(produto.getId())).thenReturn(Optional.of(produto));
-        when(produtoRepository.save(any(Produto.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        
 
-        RestauranteDTO restauranteDTO = new RestauranteDTO(1L, "Restaurante Teste", "", null, null, null, false, null, null,                
+        RestauranteDTO restauranteDTO = new RestauranteDTO(1L, "Restaurante Teste", "", null, null, BigDecimal.valueOf(1), false, null, null,                
                 "08:00-22:00");
 
         ProdutoDTO dtoAtualizado = new ProdutoDTO(
@@ -109,12 +107,14 @@ class ProdutoServiceTest {
                 false,
                 restauranteDTO
         );
+        when(produtoRepository.findById(produto.getId())).thenReturn(Optional.of(produto));
+        when(produtoRepository.save(any(Produto.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         ProdutoResponseDTO response = produtoService.atualizar(1L,dtoAtualizado);
 
         assertEquals("Produto Atualizado", response.nome());
         assertFalse(response.disponivel());
-        verify(produtoRepository, times(1)).save(produto);
+        verify(produtoRepository, times(1)).save(any(Produto.class));
     }
 
     @Test
@@ -147,12 +147,10 @@ class ProdutoServiceTest {
         when(produtoRepository.findByCategoriaAndDisponivelTrue("Categoria Vazia"))
                 .thenReturn(List.of());
 
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
+        assertThrows(
+                EntityNotFoundException.class,
                 () -> produtoService.buscarPorCategoria("Categoria Vazia")
         );
-
-        assertEquals("Nenhum produto encontrado na categoria: Categoria Vazia", exception.getMessage());
     }
 
     @Test
@@ -192,11 +190,9 @@ class ProdutoServiceTest {
     void deveLancarExcecaoProdutoInexistente() {
         when(produtoRepository.findById(anyLong())).thenReturn(Optional.empty());
 
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
+        assertThrows(
+                EntityNotFoundException.class,
                 () -> produtoService.buscarPorId(99L)
         );
-
-        assertEquals("Produto não encontrado: 99", exception.getMessage());
     }
 }

@@ -25,6 +25,8 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.media.Content; 
+import io.swagger.v3.oas.annotations.media.Schema; 
 import jakarta.validation.Valid;
 
 import org.springframework.web.bind.annotation.PutMapping;
@@ -36,9 +38,11 @@ import org.springframework.web.bind.annotation.PutMapping;
 //Todo: incluir api response wrapper para todos os endpoint
 //Todo: Excluir endpoint's redundantes
 //Todo: incluir versionamento de api
+//Todo: Unificar os endpoints de busca em um único endpoint com múltiplos filtros
 
 @RestController
 @RequestMapping("/api/restaurantes")
+@Tag(name = "Restaurantes", description = "Operações relacionadas ao gerenciamento de restaurantes") 
 @CrossOrigin("*")
 @Tag(name = "Restaurantes", description="API de Gereciamento de Restaurantes")
 public class RestauranteController {
@@ -54,6 +58,8 @@ public class RestauranteController {
         @ApiResponse(responseCode = "201", description = "Restaurante criado com sucesso"),
         @ApiResponse(responseCode = "400", description = "Dados inválidos"),
         @ApiResponse(responseCode = "500", description = "Erro interno"),
+        @ApiResponse(responseCode = "401", description = "Não autorizado"), 
+        @ApiResponse(responseCode = "403", description = "Acesso negado") 
     })
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<RestauranteResponseDTO> cadastrar(
@@ -72,7 +78,8 @@ public class RestauranteController {
     @GetMapping("/{id}")
     @Operation(
         summary = "Buscar restaurante por ID", 
-        description = "Recupera um restaurante específico pelo ID"
+        description = "Recupera um restaurante específico pelo ID",
+        tags = {"Restaurantes"} 
     ) 
     @ApiResponses({ 
         @ApiResponse(responseCode = "200", description = "Restaurante encontrado"), 
@@ -90,14 +97,22 @@ public class RestauranteController {
     public ResponseEntity<RestauranteResponseDTO> buscarProdutos(@PathVariable Long id) {
         RestauranteResponseDTO restauranteDTO = restauranteService.buscarProdutos(id);
 
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body(restauranteDTO);
+        return ResponseEntity.status(HttpStatus.OK).body(restauranteDTO);
     }
 
     @GetMapping()
-    @Operation(summary = "Listar restaurantes", 
-        description = "Lista restaurantes com filtros opcionais e paginação") 
+    @Operation(
+        summary = "Listar restaurantes", 
+        description = "Lista restaurantes com filtros opcionais e paginação",
+        tags = {"Restaurantes"}
+        ) 
     @ApiResponses({ 
-        @ApiResponse(responseCode = "200", description = "Lista recuperada com sucesso") 
+        @ApiResponse(responseCode = "200", description = "Lista recuperada com sucesso",
+         content = @Content( 
+                mediaType = "applica on/json", 
+                schema = @Schema(implementation = RestauranteResponseDTO.class) 
+            )
+        ) 
     })
     public ResponseEntity<List<RestauranteResponseDTO>> buscarRestaurantes(
         @Parameter(description = "Categoria do restaurante") 
@@ -106,13 +121,13 @@ public class RestauranteController {
         @RequestParam(required = false) Boolean ativo 
             )  {
         List<RestauranteResponseDTO> restauranteDTOs = restauranteService.listar(categoria, ativo);
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body(restauranteDTOs);
+        return ResponseEntity.status(HttpStatus.OK).body(restauranteDTOs);
     }
     
     @GetMapping("/categoria/{categoria}")
     public ResponseEntity<List<RestauranteResponseDTO>> buscarPorCategoria(@PathVariable String categoria) {
         List<RestauranteResponseDTO> restauranteDTOs = restauranteService.buscarPorCategoria(categoria);
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body(restauranteDTOs);
+        return ResponseEntity.status(HttpStatus.OK).body(restauranteDTOs);
     }
     
     @PutMapping("")
@@ -133,7 +148,7 @@ public class RestauranteController {
         @RequestBody RestauranteDTO restauranteDTO) {
         RestauranteResponseDTO restaurante = restauranteService.atualizar(id, restauranteDTO);
         
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body(restaurante);
+        return ResponseEntity.status(HttpStatus.OK).body(restaurante);
     }
 
     @PatchMapping("/{id}")
@@ -144,10 +159,11 @@ public class RestauranteController {
         @ApiResponse(responseCode = "200", description = "Restaurante atualizado com sucesso"), 
         @ApiResponse(responseCode = "404", description = "Restaurante não encontrado"), 
     })
+     @PreAuthorize("hasRole('ADMIN')") 
     public ResponseEntity<RestauranteResponseDTO> ativarOuInativarRestaurante(@PathVariable Long id, @RequestBody Boolean ativo){
         RestauranteResponseDTO restaurante = restauranteService.ativarDesativar(id, ativo);
 
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body(restaurante);
+        return ResponseEntity.status(HttpStatus.OK).body(restaurante);
     }
     
      
@@ -158,9 +174,10 @@ public class RestauranteController {
         @ApiResponse(responseCode = "200", description = "Taxa calculada com sucesso"), 
         @ApiResponse(responseCode = "404", description = "Restaurante não encontrado") 
     })
+    @PreAuthorize("hasRole('ADMIN') or (hasRole('RESTAURANTE') and @restauranteService.isOwner(#id))") 
     public ResponseEntity<BigDecimal> calcularTaxaEntrega(@PathVariable Long id, @PathVariable String cep) {
         BigDecimal taxaDeEntrega = restauranteService.calcularTaxaDeEntrega(id, cep);
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body(taxaDeEntrega);
+        return ResponseEntity.status(HttpStatus.OK).body(taxaDeEntrega);
     }
 
     @GetMapping("/proximos/{cep}") 
@@ -179,7 +196,7 @@ public class RestauranteController {
         List<RestauranteResponseDTO> restaurantes = 
             restauranteService.buscarRestaurantesProximos(cep, raio); 
  
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body(restaurantes); 
+        return ResponseEntity.status(HttpStatus.OK).body(restaurantes); 
     }
     
 }
