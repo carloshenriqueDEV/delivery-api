@@ -1,5 +1,11 @@
-package com.deliverytech.delivery_api.entity;
+package com.deliverytech.delivery_api.unit.entity;
 
+import com.deliverytech.delivery_api.entity.Cliente;
+import com.deliverytech.delivery_api.entity.Endereco;
+import com.deliverytech.delivery_api.entity.ItemPedido;
+import com.deliverytech.delivery_api.entity.Pedido;
+import com.deliverytech.delivery_api.entity.Produto;
+import com.deliverytech.delivery_api.entity.Restaurante;
 import com.deliverytech.delivery_api.enums.StatusPedido;
 import org.junit.jupiter.api.Test;
 import java.math.BigDecimal;

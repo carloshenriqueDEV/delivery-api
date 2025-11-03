@@ -1,7 +1,10 @@
-package com.deliverytech.delivery_api.entity;
+package com.deliverytech.delivery_api.unit.entity;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+
+import com.deliverytech.delivery_api.entity.Cliente;
+import com.deliverytech.delivery_api.entity.Endereco;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;

@@ -92,7 +92,7 @@
 		<version>1.7.0</version> 
 		</dependency> 
 		
-		<!-- Spring Security + validation (starter-test já cobre testes) -->
+		<!-- Spring Security + validation -->
 		<dependency>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-security</artifactId>

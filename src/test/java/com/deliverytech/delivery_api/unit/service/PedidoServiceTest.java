@@ -1,11 +1,19 @@
-package com.deliverytech.delivery_api.service;
+package com.deliverytech.delivery_api.unit.service;
 
-import com.deliverytech.delivery_api.entity.*;
+import com.deliverytech.delivery_api.entity.Cliente;
+import com.deliverytech.delivery_api.entity.Endereco;
+import com.deliverytech.delivery_api.entity.Pedido;
+import com.deliverytech.delivery_api.entity.Produto;
+import com.deliverytech.delivery_api.entity.Restaurante;
 import com.deliverytech.delivery_api.enums.StatusPedido;
 import com.deliverytech.delivery_api.exception.BusinessException;
 import com.deliverytech.delivery_api.exception.EntityNotFoundException;
 import com.deliverytech.delivery_api.repository.*;
+import com.deliverytech.delivery_api.service.PedidoService;
+import com.deliverytech.delivery_api.service.RestauranteService;
 import com.deliverytech.delivery_api.service.dtos.*;
+import com.deliverytech.delivery_api.unit.entity.*;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;

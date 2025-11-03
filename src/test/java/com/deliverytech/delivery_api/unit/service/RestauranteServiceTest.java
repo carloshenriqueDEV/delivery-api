@@ -1,4 +1,4 @@
-package com.deliverytech.delivery_api.service;
+package com.deliverytech.delivery_api.unit.service;
 
 import com.deliverytech.delivery_api.entity.Endereco;
 import com.deliverytech.delivery_api.entity.Restaurante;
@@ -6,6 +6,7 @@ import com.deliverytech.delivery_api.exception.ConflictException;
 import com.deliverytech.delivery_api.exception.EntityNotFoundException;
 import com.deliverytech.delivery_api.external.DistanceApiClient;
 import com.deliverytech.delivery_api.repository.RestauranteRepository;
+import com.deliverytech.delivery_api.service.RestauranteService;
 import com.deliverytech.delivery_api.service.dtos.EnderecoDTO;
 import com.deliverytech.delivery_api.service.dtos.ProdutoDTO;
 import com.deliverytech.delivery_api.service.dtos.RestauranteDTO;

@@ -1,6 +1,10 @@
-package com.deliverytech.delivery_api.entity;
+package com.deliverytech.delivery_api.unit.entity;
 
 import org.junit.jupiter.api.Test;
+
+import com.deliverytech.delivery_api.entity.ItemPedido;
+import com.deliverytech.delivery_api.entity.Produto;
+
 import java.math.BigDecimal;
 import static org.assertj.core.api.Assertions.*;
 
