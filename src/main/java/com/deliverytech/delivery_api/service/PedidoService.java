@@ -18,6 +18,8 @@ import com.deliverytech.delivery_api.service.dtos.PedidoDTO;
 import com.deliverytech.delivery_api.service.dtos.PedidoResponseDTO;
 import com.deliverytech.delivery_api.service.interfaces.PedidoServiceInterface;
 
+import io.micrometer.core.instrument.MeterRegistry;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -41,12 +43,18 @@ public class PedidoService implements PedidoServiceInterface {
 
     @Autowired
     private RestauranteService restauranteService;
+
+    @Autowired
+    private MeterRegistry meterRegistry;
  
     /** 
      * Criar novo pedido 
      */ 
     @Override
     public PedidoResponseDTO criarPedido( PedidoDTO pedidoDTO) { 
+        meterRegistry.counter("delivery.pedidos.tentativa").increment();
+        Pedido pedido = null;
+        try {
         Cliente cliente = clienteRepository.findByIdAndAtivoTrue(pedidoDTO.clienteId()) 
             .orElseThrow(() -> new EntityNotFoundException("Cliente não encontrado: " + pedidoDTO.clienteId())); 
  
@@ -98,9 +106,16 @@ public class PedidoService implements PedidoServiceInterface {
         
         BigDecimal taxaDeEntrega = restauranteService.calcularTaxaDeEntrega(restaurante.getId(), pedidoDTO.enderecoDeEntrega().cep());
             
-        Pedido pedido = new Pedido(cliente,restaurante, itens,StatusPedido.PENDENTE, pedidoDTO.observacoes(), taxaDeEntrega, pedidoDTO.getEnderecoEntreDeEntraga()); 
+        pedido = new Pedido(cliente,restaurante, itens,StatusPedido.PENDENTE, pedidoDTO.observacoes(), taxaDeEntrega, pedidoDTO.getEnderecoEntreDeEntraga()); 
 
         pedidoRepository.save(pedido);
+         } catch (Exception ex) {
+            meterRegistry.counter("delivery.pedidos.erro").increment();
+            throw ex; // 🔥 Re-lança a exceção para o GlobalExceptionHandler capturar
+        }
+
+        meterRegistry.counter("delivery.pedidos.total").increment();
+        meterRegistry.counter("delivery.pedidos.sucesso").increment();
 
         return  PedidoResponseDTO.fromEntity(pedido);
     } 

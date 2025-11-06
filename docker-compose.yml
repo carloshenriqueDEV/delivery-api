@@ -1,0 +1,54 @@
+version: '3.8'
+services:
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+      - redis
+    environment:
+      # Spring Boot relaxed binding accepts variáveis assim:
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/delivery?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: user
+      SPRING_DATASOURCE_PASSWORD: userpass
+      SPRING_REDIS_HOST: redis
+      # Opcional: criar schema automaticamente (apenas para dev!)
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      # Ajuste log level/actuator se quiser
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,info,prometheus,metrics
+      # Ajuste memória Java se necessário
+      JAVA_OPTS: -Xmx512m
+
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: delivery
+      MYSQL_USER: user
+      MYSQL_PASSWORD: userpass
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7.0-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  zipkin:
+    image: openzipkin/zipkin
+    ports:
+      - "9411:9411"
+volumes:
+  db_data:

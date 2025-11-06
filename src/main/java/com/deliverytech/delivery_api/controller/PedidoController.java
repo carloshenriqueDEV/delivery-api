@@ -52,7 +52,7 @@ public class PedidoController {
         @ApiResponse(responseCode = "404", description = "Cliente ou restaurante não encontrado"), 
         @ApiResponse(responseCode = "409", description = "Produto indisponível") 
     }) 
-    @PreAuthorize("hasRole('CLIENTE')")
+    @PreAuthorize("hasRole('CLIENTE') or hasRole('ADMIN')")
     public ResponseEntity<PedidoResponseDTO> criarPedido(@RequestBody @Valid 
             @io.swagger.v3.oas.annotations.parameters.RequestBody( 
                 description = "Dados do pedido a ser criado" 

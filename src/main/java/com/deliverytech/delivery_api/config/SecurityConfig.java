@@ -60,8 +60,13 @@ public class SecurityConfig {
                     "/swagger-ui.html",
                     "/api-docs/**",
                     "/actuator/health",
+                    "/actuator/info",
+                    "/actuator/metrics",
+                    "/actuator/prometheus",
                     "/h2-console/**",
-                    "/actuator/health"
+                    "/dashboard/**",
+                    "/dashboard/api/metrics"
+                    
                 ).permitAll()
                 .anyRequest().authenticated()
             )

@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard - Sistema de Delivery</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #fafafa;
+        }
+        h1 {
+            color: #333;
+        }
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .metric-card {
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 8px;
+            background: #fff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .metric-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #2196F3;
+        }
+        .metric-label {
+            color: #666;
+            margin-top: 5px;
+        }
+        .chart-container {
+            width: 100%;
+            height: 300px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Dashboard de Monitoramento - Sistema de Delivery</h1>
+
+    <div class="dashboard-grid">
+        <div class="metric-card">
+            <div class="metric-value" id="pedidos-total">0</div>
+            <div class="metric-label">Pedidos Processados</div>
+        </div>
+
+        <div class="metric-card">
+            <div class="metric-value" id="receita-total">R$ 0,00</div>
+            <div class="metric-label">Receita Total</div>
+        </div>
+
+        <div class="metric-card">
+            <div class="metric-value" id="usuarios-ativos">0</div>
+            <div class="metric-label">Usuários Ativos</div>
+        </div>
+
+        <div class="metric-card">
+            <div class="metric-value" id="tempo-medio">0ms</div>
+            <div class="metric-label">Tempo Médio de Processamento</div>
+        </div>
+    </div>
+
+    <div class="dashboard-grid" style="margin-top: 30px;">
+        <div class="metric-card">
+            <h3>Pedidos por Status</h3>
+            <div class="chart-container">
+                <canvas id="pedidos-chart"></canvas>
+            </div>
+        </div>
+
+        <div class="metric-card">
+            <h3>Performance do Sistema</h3>
+            <div class="chart-container">
+                <canvas id="performance-chart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Função para buscar métricas da API (mock com Actuator)
+        async function fetchMetrics() {
+            try {
+                // Exemplo: substitua /dashboard/api/metrics pelo endpoint real ou /actuator/metrics
+                const response = await fetch('http://localhost:8080/dashboard/api/metrics');
+                const data = await response.json();
+                updateDashboard(data);
+            } catch (error) {
+                console.error('Erro ao buscar métricas:', error);
+            }
+        }
+
+        // Atualiza os valores principais
+        function updateDashboard(data) {
+            document.getElementById('pedidos-total').textContent =
+                Math.round(data.pedidos_total || 0);
+            document.getElementById('receita-total').textContent =
+                'R$ ' + (data.receita_total || 0).toFixed(2);
+            document.getElementById('usuarios-ativos').textContent =
+                Math.round(data.usuarios_ativos || 0);
+            document.getElementById('tempo-medio').textContent =
+                Math.round(data.tempo_medio_pedido || 0) + 'ms';
+
+            updateCharts(data);
+        }
+
+        // Configuração dos gráficos com Chart.js
+        const pedidosChart = new Chart(document.getElementById('pedidos-chart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Sucesso', 'Erro'],
+                datasets: [{
+                    data: [0, 0],
+                    backgroundColor: ['#4CAF50', '#F44336']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+
+        const performanceChart = new Chart(document.getElementById('performance-chart'), {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Tempo de Resposta (ms)',
+                    data: [],
+                    borderColor: '#2196F3',
+                    fill: false,
+                    tension: 0.2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+
+        // Atualiza os gráficos
+        function updateCharts(data) {
+            pedidosChart.data.datasets[0].data = [
+                data.pedidos_sucesso || 0,
+                data.pedidos_erro || 0
+            ];
+            pedidosChart.update();
+
+            const tempo = data.tempo_medio_pedido || Math.random() * 1000;
+            const label = new Date().toLocaleTimeString();
+
+            performanceChart.data.labels.push(label);
+            performanceChart.data.datasets[0].data.push(tempo);
+
+            if (performanceChart.data.labels.length > 10) {
+                performanceChart.data.labels.shift();
+                performanceChart.data.datasets[0].data.shift();
+            }
+
+            performanceChart.update();
+        }
+
+        // Atualiza a cada 5 segundos
+        setInterval(fetchMetrics, 5000);
+        fetchMetrics(); // inicial
+    </script>
+</body>
+</html>

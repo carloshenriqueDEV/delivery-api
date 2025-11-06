@@ -10,7 +10,9 @@ import com.deliverytech.delivery_api.service.dtos.ProdutoResponseDTO;
 import com.deliverytech.delivery_api.service.dtos.RestauranteResponseDTO;
 import com.deliverytech.delivery_api.service.interfaces.ProdutoServiceInterface;
 
-import org.springframework.beans.factory.annotation.Autowired; 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service; 
 import org.springframework.transaction.annotation.Transactional; 
  
@@ -83,6 +85,7 @@ public class ProdutoService implements ProdutoServiceInterface {
      * Atualizar produto 
      */ 
     @Override
+     @CacheEvict(value = "produtos", key = "#produto.id")  
     public ProdutoResponseDTO atualizar(Long id, ProdutoDTO produtoAtualizado) { 
 
         produtoRepository.findById(id) 
@@ -142,6 +145,7 @@ public class ProdutoService implements ProdutoServiceInterface {
 
 
     @Override
+    @Cacheable(value = "produtos", key = "#id") 
     public ProdutoResponseDTO buscarPorId(Long id) {
         Produto produto = produtoRepository.findById(id)
             .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado: " + id));
