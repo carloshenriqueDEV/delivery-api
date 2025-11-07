@@ -10,8 +10,8 @@ import java.util.UUID;
 @Component 
 public class CorrelationIdFilter implements Filter { 
  
-    private static final String CORRELATION_ID_HEADER = "X-Correla on-ID"; 
-    private static final String CORRELATION_ID_MDC_KEY = "correla onId"; 
+    private static final String CORRELATION_ID_HEADER = "X-Correlation-ID"; 
+    private static final String CORRELATION_ID_MDC_KEY = "correlationId"; 
  
     @Override 
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain 
@@ -36,7 +36,7 @@ chain)
             MDC.put("userAgent", httpRequest.getHeader("User-Agent")); 
             MDC.put("sessionId", httpRequest.getSession().getId()); 
             MDC.put("requestUri", httpRequest.getRequestURI()); 
-            MDC.put("h pMethod", httpRequest.getMethod()); 
+            MDC.put("httpMethod", httpRequest.getMethod()); 
  
             // Adicionar correlation ID ao header de resposta 
             httpResponse.setHeader(CORRELATION_ID_HEADER, correlationId); 
