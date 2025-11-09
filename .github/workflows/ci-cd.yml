@@ -1,0 +1,34 @@
+name: CI/CD Delivery API
+
+on:
+  push:
+    branches:
+      - develop
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: '21'
+          distribution: 'amazoncorretto'
+
+      - name: Build & Test
+        run: mvn clean verify
+
+      - name: Deploy to Heroku (Homolog only)
+        if: github.ref == 'refs/heads/develop'
+        run: |
+          echo "Deploying to Homolog..."
+          heroku plugins:install heroku-cli-deploy
+          heroku deploy:jar target/*.jar --app delivery-api-homolog --jdk 21 --includes web
+
+      - name: Prepare Production Build (NO DEPLOY)
+        if: github.ref == 'refs/heads/main'
+        run: echo "Build OK. Deploy to Production must be done manually via Heroku Promote."

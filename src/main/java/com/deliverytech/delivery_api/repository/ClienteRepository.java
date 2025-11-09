@@ -34,8 +34,14 @@ public interface ClienteRepository extends JpaRepository<Cliente, Long> {
     @Query("SELECT DISTINCT c FROM Cliente c JOIN c.pedidos p WHERE c.ativo = true") 
     List<Cliente> findClientesComPedidos(); 
  
-    // Query na va - clientes por cidade 
-    @Query("SELECT c FROM Cliente c WHERE c.endereco.cidade LIKE CONCAT('%', :cidade, '%') AND c.ativo = true")
+    // Query  clientes por cidade 
+    @Query("""
+    SELECT DISTINCT c 
+    FROM Cliente c 
+    JOIN c.enderecos e
+    WHERE e.cidade LIKE CONCAT('%', :cidade, '%')
+      AND c.ativo = true
+    """)
     List<Cliente> findByCidade(String cidade);      
  
     // Contar clientes a vos 
