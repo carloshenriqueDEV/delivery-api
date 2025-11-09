@@ -12,13 +12,13 @@ import com.deliverytech.delivery_api.repository.*;
 import com.deliverytech.delivery_api.service.PedidoService;
 import com.deliverytech.delivery_api.service.RestauranteService;
 import com.deliverytech.delivery_api.service.dtos.*;
-import com.deliverytech.delivery_api.unit.entity.*;
+
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
-import org.springframework.boot.test.context.SpringBootTest;
-
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
@@ -30,7 +30,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
-@SpringBootTest
+
 class PedidoServiceTest {
 
     @InjectMocks
@@ -46,7 +46,8 @@ class PedidoServiceTest {
     private ProdutoRepository produtoRepository;
     @Mock
     private RestauranteService restauranteService;
-
+    @Mock private MeterRegistry meterRegistry; 
+    @Mock private Counter counter; 
     private Cliente cliente;
     private Restaurante restaurante;
     private Produto produto;
@@ -75,6 +76,9 @@ class PedidoServiceTest {
         produto.setPreco(new BigDecimal("25.00"));
         produto.setDisponivel(true);
         produto.setRestaurante(restaurante);
+
+        when(meterRegistry.counter(anyString())).thenReturn(counter);
+
     }
 
     @Test
