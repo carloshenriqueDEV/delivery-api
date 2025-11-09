@@ -22,12 +22,10 @@ jobs:
       - name: Build & Test
         run: mvn clean verify
 
-      - name: Deploy to Heroku (Homolog only)
+      - name: Homolog Deployment
         if: github.ref == 'refs/heads/develop'
         run: |
           echo "Deploying to Homolog..."
-          heroku plugins:install heroku-cli-deploy
-          heroku deploy:jar target/*.jar --app delivery-api-homolog --jdk 21 --includes web
 
       - name: Prepare Production Build (NO DEPLOY)
         if: github.ref == 'refs/heads/main'
